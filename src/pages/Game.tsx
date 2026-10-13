@@ -3,7 +3,10 @@ import type React from "react";
 import { useAppNavigate } from "../app/navigation";
 import { useAppContext } from "../app/useAppContext";
 import { GameHUD } from "../components/GameHUD";
+import { ParticleEffect } from "../components/ParticleEffect";
+import { ScorePopupLayer } from "../components/ScorePopup";
 import { TypingInput } from "../components/TypingInput";
+import "../components/GameFx.css";
 import { QUESTIONS } from "../data/questions";
 import { resolveDifficulty } from "../game/difficulty";
 import { selectWeakQuestions } from "../game/questions";
@@ -11,7 +14,9 @@ import { applySessionResult, type SessionDatabase } from "../game/session";
 import { getSharedAudioEngine } from "../hooks/useAudio";
 import { useGame, type UseGameOptions } from "../hooks/useGame";
 import { useGameAudio } from "../hooks/useGameAudio";
+import { useGameFx } from "../hooks/useGameFx";
 import { useKeyboard } from "../hooks/useKeyboard";
+import { useReducedMotion } from "../hooks/useReducedMotion";
 import { db } from "../storage";
 import type { Difficulty, Question, QuestionStat } from "../types/game";
 
@@ -95,6 +100,9 @@ function GameSession({
   const unlockAudio = useCallback(() => {
     void getSharedAudioEngine().unlock();
   }, []);
+  // 演出（#23）。ゲーム進行はブロックしない（§18.3）
+  const reducedMotion = useReducedMotion();
+  const fx = useGameFx(engine, snapshot, { settings, reducedMotion });
   const containerRef = useRef<HTMLElement>(null);
   // 確定処理の中で使う最新の依存を ref に保持し、effect の再実行で遷移が取り消されないようにする
   const depsRef = useRef({ nav, refresh, database });
@@ -191,20 +199,45 @@ function GameSession({
       data-state={snapshot.state}
       onKeyDownCapture={unlockAudio}
       onClickCapture={unlockAudio}
+      data-shake={fx.shakeAttr}
     >
+      {settings.particles && <ParticleEffect particles={fx.particles} />}
       <GameHUD
         score={snapshot.score}
         remainingMs={snapshot.remainingMs}
         combo={snapshot.combo}
         fever={snapshot.fever}
+        animate={fx.animate}
       />
 
-      <div className="flex flex-1 flex-col items-center justify-center">
+      <div className="relative flex flex-1 flex-col items-center justify-center">
         {snapshot.state === "COUNTDOWN" && (
           <Countdown remainingMs={snapshot.countdownRemainingMs} />
         )}
         {snapshot.question && snapshot.typing && snapshot.state !== "COUNTDOWN" && (
-          <TypingInput question={snapshot.question} typing={snapshot.typing} />
+          <div className="relative w-full">
+            <ScorePopupLayer popups={fx.popups} animate={fx.animate} />
+            {fx.ghost && (
+              <TypingInput
+                key={fx.ghost.id}
+                question={fx.ghost.question}
+                typing={{
+                  answer: fx.ghost.question.answer,
+                  cursor: fx.ghost.question.answer.length,
+                  correctKeystrokes: 0,
+                  incorrectKeystrokes: 0,
+                  lastInput: null,
+                  completed: true,
+                }}
+                ghost
+              />
+            )}
+            <TypingInput
+              question={snapshot.question}
+              typing={snapshot.typing}
+              charAnimKey={fx.animate ? fx.charAnimKey : undefined}
+            />
+          </div>
         )}
         {snapshot.state === "FINISHED" && (
           <p className="mt-8 text-2xl font-bold text-perfect" role="status">
