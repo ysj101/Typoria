@@ -23,7 +23,8 @@ describe("routing (§4)", () => {
   it.each([
     [ROUTES.home, "Typoria"],
     [ROUTES.game, "Game"],
-    [ROUTES.result, "Result"],
+    // Result は route state が無いとホームへリダイレクトする（#18）
+    [ROUTES.result, "Typoria"],
     [ROUTES.history, "History"],
     [ROUTES.settings, "Settings"],
   ])("renders %s", async (path, heading) => {
