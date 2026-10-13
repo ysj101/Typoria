@@ -1,12 +1,17 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RouterProvider } from "react-router";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { AppProvider } from "../app/AppContext";
 import { ROUTES } from "../app/navigation";
 import { createTestRouter } from "../app/router";
 import { createMemoryStorage, type AppStorage } from "../app/storage";
 import { localDateKey, missionsForDate } from "../game/habit";
+
+const unlock = vi.fn(async () => {});
+vi.mock("../hooks/useAudio", () => ({
+  getSharedAudioEngine: () => ({ unlock }),
+}));
 
 function renderHome(storage: AppStorage = createMemoryStorage()) {
   const router = createTestRouter([ROUTES.home]);
@@ -88,5 +93,12 @@ describe("Home (§4.1)", () => {
     expect(screen.getByRole("button", { name: "PLAY" })).toHaveFocus();
     await userEvent.keyboard("{Enter}");
     expect(router.state.location.pathname).toBe(ROUTES.game);
+  });
+
+  it("unlocks the audio engine when PLAY is pressed (§9.2)", async () => {
+    unlock.mockClear();
+    renderHome();
+    await userEvent.click(await screen.findByRole("button", { name: "PLAY" }));
+    expect(unlock).toHaveBeenCalledTimes(1);
   });
 });

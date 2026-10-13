@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { useAppNavigate, ROUTES } from "../app/navigation";
 import { useAppContext } from "../app/useAppContext";
 import { resolveDifficulty } from "../game/difficulty";
+import { getSharedAudioEngine } from "../hooks/useAudio";
 import { DAILY_MISSIONS, localDateKey, resolveMissionForDate } from "../game/habit";
 import type { DailyMissionProgress, Difficulty } from "../types/game";
 
@@ -34,6 +35,11 @@ export function Home() {
 
   const difficulty = resolveDifficulty(settings.difficultyMode, progress);
   const playedToday = progress.lastPlayedDate === todayKey;
+  // PLAY 操作で AudioContext を unlock してからゲームへ（自動再生制限対応 §9.2）
+  const onPlay = () => {
+    void getSharedAudioEngine().unlock();
+    nav.toGame();
+  };
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-xl flex-col items-center justify-center gap-8 px-4 py-10">
@@ -45,7 +51,7 @@ export function Home() {
       <button
         type="button"
         autoFocus
-        onClick={nav.toGame}
+        onClick={onPlay}
         className="rounded-full bg-perfect px-12 py-4 text-2xl font-bold text-bg shadow-lg transition-transform hover:scale-105 focus:outline-none focus-visible:ring-4 focus-visible:ring-fever"
       >
         PLAY
