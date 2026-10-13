@@ -3,6 +3,11 @@ import type { ChangeEvent } from "react";
 import { Link } from "react-router";
 import { ROUTES } from "../app/navigation";
 import { useAppContext } from "../app/useAppContext";
+import {
+  needsExplicitFileSave,
+  shareOrDownloadFile,
+  triggerFileDownload,
+} from "../app/fileTransfer";
 import { db, validateExportData, type TyporiaDatabase } from "../storage";
 import type { DifficultyMode, ExportData, ScreenShake } from "../types/game";
 
@@ -52,28 +57,15 @@ function readFileText(file: File): Promise<string> {
   });
 }
 
-/** JSON をダウンロードさせる。jsdom など createObjectURL が無い環境では何もしない */
-function downloadJson(text: string, fileName: string) {
-  if (typeof URL.createObjectURL !== "function") return;
-  const blob = new Blob([text], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = fileName;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(url);
-}
-
 const BUTTON_CLASS =
-  "rounded-full px-5 py-2 font-bold focus:outline-none focus-visible:ring-4 focus-visible:ring-fever disabled:opacity-50";
+  "inline-flex min-h-11 min-w-11 items-center justify-center rounded-full px-5 py-2 font-bold focus:outline-none focus-visible:ring-4 focus-visible:ring-fever disabled:opacity-50";
 const OUTLINE_BUTTON_CLASS = `${BUTTON_CLASS} border border-subtext`;
 const PRIMARY_BUTTON_CLASS = `${BUTTON_CLASS} bg-perfect text-bg`;
 
 export function Settings({ database = db }: SettingsProps) {
   const { ready, settings, updateSettings, refresh } = useAppContext();
   const [importState, setImportState] = useState<ImportState>({ kind: "idle" });
+  const [preparedExport, setPreparedExport] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const sfxId = useId();
@@ -87,10 +79,22 @@ export function Settings({ database = db }: SettingsProps) {
     setBusy(true);
     try {
       const data = await database.exportData();
-      downloadJson(JSON.stringify(data, null, 2), exportFileName(new Date()));
+      const fileName = exportFileName(new Date());
+      const file = new File([JSON.stringify(data, null, 2)], fileName, {
+        type: "application/json",
+      });
+      // Android / desktop Chrome は download 属性で保存できる（AC-19）
+      triggerFileDownload(file, fileName);
+      // iOS Chrome は上の click を無視することがあるので、次のタップで保存する
+      setPreparedExport(needsExplicitFileSave() ? file : null);
     } finally {
       setBusy(false);
     }
+  };
+
+  const handleSavePrepared = () => {
+    if (!preparedExport) return;
+    void shareOrDownloadFile(preparedExport);
   };
 
   const resetFileInput = () => {
@@ -140,15 +144,15 @@ export function Settings({ database = db }: SettingsProps) {
 
   // 読み込み完了前は同じツリーのまま操作だけ無効化する（DOM の差し替えで見出しが消えないように）
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-xl flex-col gap-8 px-4 py-10">
-      <header className="flex items-center justify-between">
+    <main className="screen-scroll mx-auto w-full max-w-xl gap-8 px-4 py-10">
+      <header className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-3xl font-bold">Settings</h1>
         <Link to={ROUTES.home} className="text-subtext underline-offset-4 hover:underline">
           ホームへ戻る
         </Link>
       </header>
 
-      <fieldset disabled={!ready || busy} className="contents">
+      <fieldset disabled={!ready || busy} className="flex min-w-0 flex-col gap-8 border-0 p-0">
         <section aria-labelledby="settings-sound" className="flex flex-col gap-4">
           <h2 id="settings-sound" className="text-xl font-bold">
             サウンド
@@ -233,19 +237,36 @@ export function Settings({ database = db }: SettingsProps) {
             <label
               htmlFor={importFileId}
               className={`${OUTLINE_BUTTON_CLASS} cursor-pointer focus-within:ring-4 focus-within:ring-fever`}
+              onClick={(event) => {
+                // input 自身の click（テストの upload を含む）はそのまま通す。
+                // ラベル文字のタップは、iOS Chrome がクリップされた file input を開けないため自前で開く。
+                if (event.target === fileInputRef.current) return;
+                event.preventDefault();
+                fileInputRef.current?.click();
+              }}
             >
               JSON をインポート
               <input
                 ref={fileInputRef}
                 id={importFileId}
                 type="file"
-                accept="application/json,.json"
+                accept=".json,application/json,text/json,text/plain"
                 className="sr-only"
                 disabled={busy}
                 onChange={(event) => void handleFileChange(event)}
               />
             </label>
           </div>
+          {preparedExport && (
+            <div className="flex flex-col gap-2">
+              <p className="text-sm text-subtext">
+                保存が始まらない場合は、下のボタンをタップしてください。
+              </p>
+              <button type="button" onClick={handleSavePrepared} className={OUTLINE_BUTTON_CLASS}>
+                ファイルを保存
+              </button>
+            </div>
+          )}
 
           {importState.kind === "confirm" && (
             <div
@@ -258,7 +279,7 @@ export function Settings({ database = db }: SettingsProps) {
                 セッション {importState.data.sessions.length} 件、累計 XP{" "}
                 {importState.data.progress.totalXP}（{importState.data.exportedAt} にエクスポート）
               </p>
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 <button
                   type="button"
                   onClick={() => void handleImportConfirm()}
@@ -303,8 +324,8 @@ interface SwitchRowProps {
 
 function SwitchRow({ id, label, checked, onChange }: SwitchRowProps) {
   return (
-    <div className="flex items-center justify-between gap-4">
-      <label htmlFor={id} className="font-medium">
+    <div className="flex min-h-11 items-center justify-between gap-4">
+      <label htmlFor={id} className="flex min-h-11 flex-1 items-center font-medium">
         {label}
       </label>
       <input
@@ -314,7 +335,7 @@ function SwitchRow({ id, label, checked, onChange }: SwitchRowProps) {
         aria-checked={checked}
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
-        className="h-6 w-6 accent-perfect focus:outline-none focus-visible:ring-4 focus-visible:ring-fever"
+        className="size-11 accent-perfect focus:outline-none focus-visible:ring-4 focus-visible:ring-fever"
       />
     </div>
   );
@@ -330,11 +351,11 @@ interface RangeRowProps {
 
 function RangeRow({ id, label, value, disabled, onChange }: RangeRowProps) {
   return (
-    <div className="flex items-center justify-between gap-4">
-      <label htmlFor={id} className="font-medium">
+    <div className="flex min-h-11 min-w-0 flex-wrap items-center justify-between gap-4">
+      <label htmlFor={id} className="flex min-h-11 items-center font-medium">
         {label}
       </label>
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
         <input
           id={id}
           type="range"
@@ -344,7 +365,7 @@ function RangeRow({ id, label, value, disabled, onChange }: RangeRowProps) {
           value={value}
           disabled={disabled}
           onChange={(event) => onChange(Number(event.target.value))}
-          className="w-40 accent-perfect focus:outline-none focus-visible:ring-4 focus-visible:ring-fever disabled:opacity-50"
+          className="w-full min-w-0 max-w-40 accent-perfect focus:outline-none focus-visible:ring-4 focus-visible:ring-fever disabled:opacity-50"
         />
         <span className="w-10 text-right text-subtext tabular-nums" aria-hidden="true">
           {value}
@@ -375,7 +396,7 @@ function RadioGroup<T extends string>({
       {options.map((option) => {
         const id = `${name}-${option.value}`;
         return (
-          <div key={option.value} className="flex items-center gap-2">
+          <div key={option.value} className="flex min-h-11 items-center gap-2">
             <input
               id={id}
               type="radio"
@@ -383,9 +404,11 @@ function RadioGroup<T extends string>({
               value={option.value}
               checked={value === option.value}
               onChange={() => onChange(option.value)}
-              className="h-5 w-5 accent-perfect focus:outline-none focus-visible:ring-4 focus-visible:ring-fever"
+              className="size-11 accent-perfect focus:outline-none focus-visible:ring-4 focus-visible:ring-fever"
             />
-            <label htmlFor={id}>{option.label}</label>
+            <label htmlFor={id} className="inline-flex min-h-11 items-center">
+              {option.label}
+            </label>
           </div>
         );
       })}

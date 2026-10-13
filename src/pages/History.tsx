@@ -47,8 +47,8 @@ export function History({ database = db, now = () => new Date() }: HistoryProps)
   const isEmpty = sessions !== null && sessions.length === 0 && progress.totalSessions === 0;
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-8 px-4 py-8">
-      <header className="flex items-center justify-between">
+    <main className="screen-scroll mx-auto w-full max-w-3xl gap-8 px-4 py-8">
+      <header className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-3xl font-bold tracking-wide">History</h1>
         <Link to={ROUTES.home} className="text-subtext underline-offset-4 hover:underline">
           ホームへ戻る
@@ -73,13 +73,13 @@ export function History({ database = db, now = () => new Date() }: HistoryProps)
         <h2 id="week-heading" className="mb-3 text-lg font-bold">
           過去 7 日間
         </h2>
-        <ul className="grid grid-cols-7 gap-2" data-testid="last-7-days">
+        <ul className="grid grid-cols-[repeat(7,minmax(0,1fr))] gap-1" data-testid="last-7-days">
           {summary.last7Days.map((day) => (
             <li
               key={day.dateKey}
               data-date={day.dateKey}
               data-played={day.count > 0}
-              className={`flex flex-col items-center rounded-lg border px-1 py-2 text-xs ${
+              className={`flex min-w-0 flex-col items-center rounded-lg border px-0.5 py-2 text-[10px] leading-tight sm:text-xs ${
                 day.count > 0
                   ? "border-correct bg-correct/20 text-text"
                   : "border-subtext/30 text-subtext"
@@ -121,7 +121,10 @@ export function History({ database = db, now = () => new Date() }: HistoryProps)
         ) : (
           <ol className="divide-y divide-subtext/20">
             {summary.recent.map((r) => (
-              <li key={r.id} className="flex items-center justify-between gap-3 py-2">
+              <li
+                key={r.id}
+                className="flex min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 py-2"
+              >
                 <span className="text-subtext">{formatDateTime(r.startedAt)}</span>
                 <span>{DIFFICULTY_LABEL[r.difficulty]}</span>
                 <span className="font-bold tabular-nums">{r.score}</span>

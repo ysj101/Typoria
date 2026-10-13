@@ -452,6 +452,27 @@ describe("Game effects (#23, §9.1, AC-08, AC-17)", () => {
     expect(game).not.toHaveAttribute("data-shake");
   });
 
+  it("marks the layout compact when the visual viewport is short", async () => {
+    const vv = {
+      height: 400,
+      offsetTop: 24,
+      addEventListener() {},
+      removeEventListener() {},
+    };
+    const descriptor = Object.getOwnPropertyDescriptor(window, "visualViewport");
+    Object.defineProperty(window, "visualViewport", { configurable: true, value: vv });
+    try {
+      const clock = createClock();
+      renderGame(clock);
+      await flushAsync();
+      expect(screen.getByTestId("game")).toHaveAttribute("data-compact", "true");
+      expect(document.documentElement.style.getPropertyValue("--vvh")).toBe("400px");
+      expect(document.documentElement.style.getPropertyValue("--vv-top")).toBe("24px");
+    } finally {
+      if (descriptor) Object.defineProperty(window, "visualViewport", descriptor);
+    }
+  });
+
   it("pops the typed character on correct input", async () => {
     const clock = createClock();
     renderGame(clock);

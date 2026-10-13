@@ -96,6 +96,24 @@ describe("Settings page (§4.5)", () => {
     await waitReady();
     await userEvent.click(screen.getByRole("button", { name: "JSON をエクスポート" }));
     await waitFor(() => expect(database.exportData).toHaveBeenCalledTimes(1));
+    expect(screen.queryByRole("button", { name: "ファイルを保存" })).not.toBeInTheDocument();
+  });
+
+  it("offers a follow-up save button on iOS Chrome", async () => {
+    const ua = vi
+      .spyOn(navigator, "userAgent", "get")
+      .mockReturnValue(
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/128.0.0.0 Mobile/15E148 Safari/604.1",
+      );
+    try {
+      const { database } = setup();
+      await waitReady();
+      await userEvent.click(screen.getByRole("button", { name: "JSON をエクスポート" }));
+      expect(await screen.findByRole("button", { name: "ファイルを保存" })).toBeInTheDocument();
+      expect(database.exportData).toHaveBeenCalledTimes(1);
+    } finally {
+      ua.mockRestore();
+    }
   });
 
   it("shows an error for an invalid import file", async () => {

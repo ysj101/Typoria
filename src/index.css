@@ -23,20 +23,110 @@
   color-scheme: dark;
 }
 
+html {
+  height: 100%;
+  /* ダブルタップズームを抑止する（ボタン・リンク以外の余白も含む） */
+  touch-action: manipulation;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
+  min-height: 100dvh;
+  max-width: 100%;
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-sans);
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  max-width: 100%;
+}
+
+/* ノッチ・ホームインジケータ分（viewport-fit=cover） */
+.app-shell {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-top: env(safe-area-inset-top);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+}
+
+.screen-scroll {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+/* 中身が画面より高いときは上端からスクロールできる（landscape のホームなど） */
+.screen-center {
+  justify-content: safe center;
+}
+
+/* タップ領域 44×44px 以上。inline の a は min-height が効かないので flex にする */
+button,
+a,
+[role="button"],
+label,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+button,
+a,
+[role="button"] {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  flex-shrink: 0;
+}
+
+input[type="range"] {
+  min-height: 44px;
 }
 
 /* タイピング対象英文用（§4.2: 文字間隔を広げる） */
 .typing-text {
   font-family: var(--font-typing);
   letter-spacing: 0.12em;
+  /* 末尾の letter-spacing が横スクロールを生まないように相殺する */
+  margin-right: -0.12em;
   font-variant-ligatures: none;
   font-variant-numeric: tabular-nums;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 /* ソフトキーボード受付用の不可視 input（#59, §14）
