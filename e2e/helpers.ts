@@ -1,0 +1,80 @@
+import { expect, type Page } from "@playwright/test";
+
+export const COUNTDOWN_MS = 3_000;
+export const GAME_DURATION_MS = 90_000;
+export const RESULT_TRANSITION_MS = 400;
+
+/** 偽装クロックを導入する。`page.goto` の前に呼ぶ */
+export async function installClock(page: Page, time = new Date("2026-10-13T10:00:00")) {
+  await page.clock.install({ time });
+}
+
+/** ホームから PLAY を押してカウントダウンを抜け、PLAYING にする（偽装クロック前提） */
+export async function startGame(page: Page) {
+  await page.goto("/");
+  await page.getByRole("button", { name: "PLAY" }).click();
+  const game = page.getByTestId("game");
+  await expect(game).toHaveAttribute("data-state", "COUNTDOWN");
+  await page.clock.runFor(COUNTDOWN_MS + 50);
+  await expect(game).toHaveAttribute("data-state", "PLAYING");
+  await expect(page.getByTestId("typing-input")).toBeVisible();
+  return game;
+}
+
+export async function readAnswer(page: Page): Promise<string> {
+  const label = await page.getByTestId("answer").getAttribute("aria-label");
+  return (label ?? "").replace("入力対象: ", "");
+}
+
+export async function currentQuestionId(page: Page): Promise<string> {
+  return (await page.getByTestId("typing-input").getAttribute("data-question-id")) ?? "";
+}
+
+export function typedCount(page: Page) {
+  return page.getByTestId("answer").locator("span[data-state=typed]");
+}
+
+/** 現在の問題を誤入力なしで打ち切る */
+export async function typeAnswer(page: Page) {
+  const id = await currentQuestionId(page);
+  const answer = await readAnswer(page);
+  await page.keyboard.type(answer);
+  await expect(page.getByTestId("typing-input")).not.toHaveAttribute("data-question-id", id);
+}
+
+export async function clearQuestions(page: Page, n: number) {
+  for (let i = 0; i < n; i += 1) await typeAnswer(page);
+}
+
+/** 90 秒進めて FINISHED → Result 画面へ遷移させる */
+export async function finishGame(page: Page) {
+  await page.clock.fastForward(GAME_DURATION_MS + 100);
+  // 保存（IndexedDB）は非同期。runFor 中に遷移まで済む場合と、RESULT で止まる場合がある
+  await expect
+    .poll(async () => {
+      if (/#\/result$/.test(page.url())) return "navigated";
+      return (await page.getByTestId("game").getAttribute("data-state")) ?? "";
+    })
+    .toMatch(/navigated|RESULT/);
+  if (!/#\/result$/.test(page.url())) await page.clock.runFor(RESULT_TRANSITION_MS + 50);
+  await expect(page).toHaveURL(/#\/result$/);
+  await expect(page.getByTestId("result-view")).toBeVisible();
+}
+
+/** 1 プレイを通しで行う（n 問クリア → 時間切れ → Result） */
+export async function playGame(page: Page, solve = 1) {
+  await startGame(page);
+  await clearQuestions(page, solve);
+  await finishGame(page);
+}
+
+/** Result の演出を完了させる */
+export async function finishResultAnimation(page: Page) {
+  await page.clock.runFor(2_500);
+  await expect(page.getByTestId("result-view")).toHaveAttribute("data-animation-done", "true");
+}
+
+export function wrongCharFor(answer: string): string {
+  const first = answer[0]?.toLowerCase();
+  return first === "z" ? "x" : "z";
+}
