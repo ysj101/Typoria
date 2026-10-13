@@ -3,6 +3,8 @@ dist
 dev-dist
 coverage
 test-results
+test-results-*
+playwright-report-*
 playwright-report
 package-lock.json
 public/sounds
