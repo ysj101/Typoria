@@ -148,11 +148,13 @@ test.describe("keyboard", () => {
     await expect(page.getByTestId("game")).toBeVisible();
   });
 
-  test("Home links are reachable by Tab in order", async ({ page }) => {
+  test("Home links are reachable by Tab in order", async ({ page, browserName }) => {
+    // Safari（WebKit）は既定で Tab がリンクに止まらず Option+Tab で移動する（ブラウザ仕様）
+    const tab = browserName === "webkit" ? "Alt+Tab" : "Tab";
     await page.goto("/");
-    await page.keyboard.press("Tab");
+    await page.keyboard.press(tab);
     await expect(page.getByRole("link", { name: "学習履歴" })).toBeFocused();
-    await page.keyboard.press("Tab");
+    await page.keyboard.press(tab);
     await expect(page.getByRole("link", { name: "設定" })).toBeFocused();
   });
 });

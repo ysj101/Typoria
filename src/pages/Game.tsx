@@ -286,23 +286,24 @@ function Countdown({ remainingMs }: { remainingMs: number }) {
 function PauseOverlay({ onResume, onQuit }: { onResume: () => void; onQuit: () => void }) {
   const dialogRef = useRef<HTMLDivElement>(null);
 
-  // フォーカストラップ: Tab / Shift+Tab がダイアログ内のボタンを循環する（§14 a11y）
+  // フォーカストラップ: Tab / Shift+Tab がダイアログ内のボタンを循環する（§14 a11y）。
+  // Safari は既定で Tab がボタンに止まらないため、ブラウザ任せにせず常に自前で移動する（docs/verification.md）
   const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key !== "Tab" || !dialogRef.current) return;
     const focusable = Array.from(
       dialogRef.current.querySelectorAll<HTMLElement>("button:not([disabled])"),
     );
     if (focusable.length === 0) return;
-    const first = focusable[0]!;
-    const last = focusable[focusable.length - 1]!;
-    const active = document.activeElement;
-    if (e.shiftKey && (active === first || !dialogRef.current.contains(active))) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && active === last) {
-      e.preventDefault();
-      first.focus();
-    }
+    e.preventDefault();
+    const index = focusable.indexOf(document.activeElement as HTMLElement);
+    const delta = e.shiftKey ? -1 : 1;
+    const next =
+      index === -1
+        ? e.shiftKey
+          ? focusable.length - 1
+          : 0
+        : (index + delta + focusable.length) % focusable.length;
+    focusable[next]!.focus();
   }, []);
 
   return (

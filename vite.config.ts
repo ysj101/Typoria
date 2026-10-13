@@ -11,6 +11,8 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: "auto",
+      // manifest の icons は globPatterns で拾うため、自動追加による precache の重複を避ける
+      includeManifestIcons: false,
       manifest: {
         name: "Typoria",
         short_name: "Typoria",
@@ -32,8 +34,9 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // JS / CSS / フォント / questions.json / public/sounds を precache する（§14, AC-20）
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2,json,mp3,wav,ogg}"],
+        // JS / CSS / フォント（woff2 のみ。対応ブラウザはすべて woff2 対応）/ アイコン / JSON / 音源を precache する（§14, AC-20）
+        // questions.json は JS にバンドルされるため個別エントリは無い
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,json,mp3,wav,ogg}"],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         navigateFallback: "index.html",
       },
