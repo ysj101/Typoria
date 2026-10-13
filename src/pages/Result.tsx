@@ -1,12 +1,21 @@
-import { useResultPayload } from "../app/navigation";
+import { Navigate } from "react-router";
+import { ROUTES, useAppNavigate, useResultPayload } from "../app/navigation";
+import { ResultView } from "../components/ResultView";
 
-/** リザルト画面（docs/spec.md §4.3）。本体は #18 で実装 */
+/** リザルト画面（docs/spec.md §4.3）。route state が無い直接アクセスはホームへ戻す */
 export function Result() {
   const payload = useResultPayload();
+  const nav = useAppNavigate();
+  if (!payload) return <Navigate to={ROUTES.home} replace />;
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8">
-      <h1 className="text-3xl font-bold">Result</h1>
-      {payload && <p data-testid="result-score">{payload.session.score}</p>}
-    </main>
+    <ResultView
+      session={payload.session}
+      isNewRecord={payload.isNewRecord}
+      missionRewards={payload.missionRewards ?? []}
+      nextDifficulty={payload.nextDifficulty}
+      streak={payload.streak}
+      onPlayAgain={nav.toGame}
+      onBackHome={nav.toHome}
+    />
   );
 }
