@@ -9,3 +9,4 @@ playwright/.cache
 .DS_Store
 *.local
 .env
+*.tsbuildinfo
