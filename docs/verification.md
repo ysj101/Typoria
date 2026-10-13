@@ -14,38 +14,38 @@ docs/spec.md §14 非機能要件、§15 Phase 4 の確認記録。計測日: 20
 
 ## 受け入れ基準の確認表
 
-「E2E」は `e2e/` の自動テストで確認したもの。AC-01〜AC-20 を網羅する `e2e/acceptance.spec.ts` は #26 で追加される。
-本 Issue の時点で自動化済みの項目と、ブラウザ固有の確認が必要な項目を区別して記載する。
+「E2E」は `e2e/` の自動テストで確認したもの。AC-01〜AC-20 を網羅する `e2e/acceptance.spec.ts`（#26）を chromium と webkit の両方で実行し、全件成功した（chromium 39 件、webkit 36 件。perf.spec は chromium 専用で skip）。
+実機ブラウザでの手動確認が必要な項目は「残課題」に記載する。
 
-| AC    | 内容                         | Chrome                          | Edge                | Safari                                   |
-| ----- | ---------------------------- | ------------------------------- | ------------------- | ---------------------------------------- |
-| AC-01 | PLAY → 3 秒カウントダウン    | E2E（game.spec）                | chromium 結果で代替 | E2E（webkit）                            |
-| AC-02 | 90 秒で終了 → Result         | 単体（engine）+ E2E（#26）      | chromium 結果で代替 | 要手動確認（#26 の webkit 実行で代替可） |
-| AC-03 | 正解で進む / 誤りで進まない  | E2E（game.spec, perf.spec）     | chromium 結果で代替 | E2E（webkit）                            |
-| AC-04 | 誤入力後に続行               | 単体（typing）+ E2E（#26）      | chromium 結果で代替 | 要手動確認                               |
-| AC-05 | 全文字入力で次の問題         | E2E（game.spec, perf.spec）     | chromium 結果で代替 | E2E（webkit）                            |
-| AC-06 | スコア計算                   | 単体（scoring, engine）         | chromium 結果で代替 | 単体（ブラウザ非依存）                   |
-| AC-07 | スキップでコンボ 0           | 単体（engine）+ E2E（#26）      | chromium 結果で代替 | 要手動確認                               |
-| AC-08 | 10 コンボで FEVER            | E2E（perf.spec）                | chromium 結果で代替 | 要手動確認                               |
-| AC-09 | Result の表示項目            | 単体（ResultView）+ axe E2E     | chromium 結果で代替 | axe E2E（webkit）                        |
-| AC-10 | リロード後も記録が残る       | 単体（database）+ E2E（#26）    | chromium 結果で代替 | 要手動確認（IndexedDB）                  |
-| AC-11 | 次回難易度の変化             | 単体（difficulty, session）     | chromium 結果で代替 | 単体（ブラウザ非依存）                   |
-| AC-12 | Streak                       | 単体（habit, session）          | chromium 結果で代替 | 単体（ブラウザ非依存）                   |
-| AC-13 | ミッション報酬 1 日 1 回     | 単体（habit, session）          | chromium 結果で代替 | 単体（ブラウザ非依存）                   |
-| AC-14 | 効果音 OFF で無音            | 単体（audio）+ E2E（#26）       | chromium 結果で代替 | 要手動確認（AudioContext unlock）        |
-| AC-15 | Esc で一時停止・時間停止     | E2E（game.spec, a11y.spec）     | chromium 結果で代替 | E2E（webkit）                            |
-| AC-16 | IME 変換中に誤判定しない     | 単体（useKeyboard）+ E2E（#26） | chromium 結果で代替 | 要手動確認（日本語 IME）                 |
-| AC-17 | パーティクル OFF             | 単体（Game.test）+ E2E（#26）   | chromium 結果で代替 | 要手動確認                               |
-| AC-18 | 演出中に Enter で PLAY AGAIN | 単体（ResultView）              | chromium 結果で代替 | 要手動確認                               |
-| AC-19 | エクスポート → インポート    | 単体（database, Settings）      | chromium 結果で代替 | 要手動確認（ファイル選択ダイアログ）     |
-| AC-20 | オフラインでプレイ           | E2E（pwa.spec）                 | chromium 結果で代替 | E2E（webkit）                            |
+| AC    | 内容                         | Chrome                          | Edge                | Safari                         |
+| ----- | ---------------------------- | ------------------------------- | ------------------- | ------------------------------ |
+| AC-01 | PLAY → 3 秒カウントダウン    | E2E（game.spec）                | chromium 結果で代替 | E2E（webkit）                  |
+| AC-02 | 90 秒で終了 → Result         | 単体（engine）+ E2E（#26）      | chromium 結果で代替 | E2E（webkit, acceptance.spec） |
+| AC-03 | 正解で進む / 誤りで進まない  | E2E（game.spec, perf.spec）     | chromium 結果で代替 | E2E（webkit）                  |
+| AC-04 | 誤入力後に続行               | 単体（typing）+ E2E（#26）      | chromium 結果で代替 | E2E（webkit, acceptance.spec） |
+| AC-05 | 全文字入力で次の問題         | E2E（game.spec, perf.spec）     | chromium 結果で代替 | E2E（webkit）                  |
+| AC-06 | スコア計算                   | 単体（scoring, engine）         | chromium 結果で代替 | 単体（ブラウザ非依存）         |
+| AC-07 | スキップでコンボ 0           | 単体（engine）+ E2E（#26）      | chromium 結果で代替 | E2E（webkit, acceptance.spec） |
+| AC-08 | 10 コンボで FEVER            | E2E（perf.spec）                | chromium 結果で代替 | E2E（webkit, acceptance.spec） |
+| AC-09 | Result の表示項目            | 単体（ResultView）+ axe E2E     | chromium 結果で代替 | axe E2E（webkit）              |
+| AC-10 | リロード後も記録が残る       | 単体（database）+ E2E（#26）    | chromium 結果で代替 | E2E（webkit, acceptance.spec） |
+| AC-11 | 次回難易度の変化             | 単体（difficulty, session）     | chromium 結果で代替 | 単体（ブラウザ非依存）         |
+| AC-12 | Streak                       | 単体（habit, session）          | chromium 結果で代替 | 単体（ブラウザ非依存）         |
+| AC-13 | ミッション報酬 1 日 1 回     | 単体（habit, session）          | chromium 結果で代替 | 単体（ブラウザ非依存）         |
+| AC-14 | 効果音 OFF で無音            | 単体（audio）+ E2E（#26）       | chromium 結果で代替 | E2E（webkit, acceptance.spec） |
+| AC-15 | Esc で一時停止・時間停止     | E2E（game.spec, a11y.spec）     | chromium 結果で代替 | E2E（webkit）                  |
+| AC-16 | IME 変換中に誤判定しない     | 単体（useKeyboard）+ E2E（#26） | chromium 結果で代替 | E2E（webkit, acceptance.spec） |
+| AC-17 | パーティクル OFF             | 単体（Game.test）+ E2E（#26）   | chromium 結果で代替 | E2E（webkit, acceptance.spec） |
+| AC-18 | 演出中に Enter で PLAY AGAIN | 単体（ResultView）              | chromium 結果で代替 | E2E（webkit, acceptance.spec） |
+| AC-19 | エクスポート → インポート    | 単体（database, Settings）      | chromium 結果で代替 | E2E（webkit, acceptance.spec） |
+| AC-20 | オフラインでプレイ           | E2E（pwa.spec）                 | chromium 結果で代替 | E2E（webkit）                  |
 
 ### Safari 固有の確認事項
 
 - **AudioContext の unlock**: `src/game/audio.ts` の `unlock()` は PLAY ボタンの click ハンドラ（`src/pages/Home.tsx`）とゲーム領域の最初の keydown / click（`src/pages/Game.tsx`）から呼ばれ、その中で `AudioContext` を生成して `resume()` する。Safari の自動再生制限はユーザー操作内での `resume()` で解除されるため要件を満たす。実機 Safari での発音は要手動確認。
 - **`keyCode === 229`（IME 変換中）**: `src/hooks/useKeyboard.ts` の `classifyKeyEvent` が `isComposing` と `keyCode === 229` の両方を無視する。単体テストで確認済み。実機の日本語 IME は要手動確認。
 - **Tab キーのフォーカス移動**: Safari は既定で Tab がリンク・ボタンに止まらず Option + Tab で移動する（ブラウザ仕様）。一時停止ダイアログのフォーカストラップはブラウザ任せにせず Tab / Shift + Tab を自前で処理するよう変更し、WebKit でも「再開」⇄「やめる」を循環することを E2E で確認した。Home のリンク移動の E2E は WebKit では `Alt+Tab` で確認している。
-- **webkit E2E 結果**: `e2e/a11y.spec.ts`、`e2e/game.spec.ts`、`e2e/pwa.spec.ts`、`e2e/smoke.spec.ts` の 16 件すべて成功（`e2e/perf.spec.ts` は chromium 専用のため skip）。
+- **webkit E2E 結果**: `acceptance.spec.ts`（AC-01〜AC-20）、`a11y.spec.ts`、`game.spec.ts`、`pwa.spec.ts`、`smoke.spec.ts` の 36 件すべて成功（`perf.spec.ts` は chromium 専用のため skip）。
 
 ## 性能計測（chromium、`e2e/perf.spec.ts`）
 
@@ -85,6 +85,6 @@ docs/spec.md §14 非機能要件、§15 Phase 4 の確認記録。計測日: 20
 
 ## 残課題（要手動確認）
 
-- 実機 Safari（macOS / iOS）での効果音・BGM の発音と日本語 IME 変換中の入力。
+- 実機 Safari（macOS / iOS）での効果音・BGM の発音（AudioContext の unlock）と日本語 IME 変換中の入力（AC-14 / AC-16 は合成イベントで自動確認済み）。
 - 実機 Edge での動作（Chromium ベースのため問題は想定していない）。
-- AC-02 / 04 / 07 / 08 / 10 / 14 / 16 / 17 / 18 / 19 の webkit での自動確認は、#26 の `acceptance.spec.ts` を `npm run test:e2e:all` で実行することで補える。
+- CI は chromium のみ。webkit は `npm run test:e2e:all` をローカルで実行する。
