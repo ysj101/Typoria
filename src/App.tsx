@@ -1,14 +1,18 @@
-import { Background } from "./components/Background";
+import { useState } from "react";
+import { RouterProvider } from "react-router";
+import { AppProvider } from "./app/AppContext";
+import { createAppRouter } from "./app/router";
+import type { AppStorage } from "./app/storage";
 
-export default function App() {
+export interface AppProps {
+  storage?: AppStorage;
+}
+
+export default function App({ storage }: AppProps) {
+  const [router] = useState(() => createAppRouter());
   return (
-    <>
-      <Background />
-      <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-8">
-        <h1 className="text-5xl font-bold tracking-widest">Typoria</h1>
-        <p className="text-subtext">タイピングで英語を学ぶ、90 秒のゲーム。</p>
-        <p className="typing-text text-2xl text-text">The quick brown fox</p>
-      </main>
-    </>
+    <AppProvider storage={storage}>
+      <RouterProvider router={router} />
+    </AppProvider>
   );
 }
