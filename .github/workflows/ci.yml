@@ -50,7 +50,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build
+      - run: VITE_BASE_PATH=/Typoria/ pnpm build
 
   e2e:
     name: e2e
