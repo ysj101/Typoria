@@ -23,3 +23,8 @@ npm run dev
 | `npm run test:e2e` | E2E テスト（Playwright）   |
 
 初回の E2E 実行前に `npx playwright install chromium` が必要です。
+
+## オフライン対応
+
+PWA（Service Worker）により、初回読み込み後はオフラインでもプレイできます。
+アイコンは `node scripts/generate-icons.mjs` で再生成できます。
