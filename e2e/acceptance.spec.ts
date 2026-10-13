@@ -11,6 +11,7 @@ import {
   startGame,
   typeAnswer,
   typedCount,
+  waitForStoredSettings,
   wrongCharFor,
 } from "./helpers";
 
@@ -250,6 +251,8 @@ test.describe("受け入れ基準 §16（設定）", () => {
     const bgm = page.getByRole("switch", { name: "BGM" });
     await bgm.click();
     await expect(bgm).toHaveAttribute("aria-checked", "false");
+    // 表示の切り替えは同期だが IndexedDB への保存は非同期。保存前に reload すると書き込みが失われる
+    await waitForStoredSettings(page, { sfxEnabled: false, bgmEnabled: false });
 
     await page.reload();
     await expect(page.getByRole("switch", { name: "効果音" })).toHaveAttribute(
@@ -271,6 +274,7 @@ test.describe("受け入れ基準 §16（設定）", () => {
     const particles = page.getByRole("switch", { name: "パーティクル" });
     await particles.click();
     await expect(particles).toHaveAttribute("aria-checked", "false");
+    await waitForStoredSettings(page, { particles: false });
     await startGame(page);
     await clearQuestions(page, 3);
     await expect(page.getByTestId("particles")).toHaveCount(0);

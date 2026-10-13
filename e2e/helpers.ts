@@ -78,3 +78,42 @@ export function wrongCharFor(answer: string): string {
   const first = answer[0]?.toLowerCase();
   return first === "z" ? "x" : "z";
 }
+
+/** IndexedDB に保存された設定を読む（保存完了を待つための確認用） */
+export async function readStoredSettings(page: Page): Promise<Record<string, unknown> | null> {
+  return page.evaluate(
+    () =>
+      new Promise<Record<string, unknown> | null>((resolve) => {
+        const req = indexedDB.open("typoria");
+        req.onerror = () => resolve(null);
+        req.onsuccess = () => {
+          const db = req.result;
+          try {
+            const get = db.transaction("settings").objectStore("settings").get("settings");
+            get.onsuccess = () => {
+              db.close();
+              resolve((get.result as Record<string, unknown> | undefined) ?? null);
+            };
+            get.onerror = () => {
+              db.close();
+              resolve(null);
+            };
+          } catch {
+            db.close();
+            resolve(null);
+          }
+        };
+      }),
+  );
+}
+
+/** 設定の保存が IndexedDB に反映されるまで待つ（reload 前に呼ぶ） */
+export async function waitForStoredSettings(page: Page, expected: Record<string, unknown>) {
+  await expect
+    .poll(async () => {
+      const stored = await readStoredSettings(page);
+      if (!stored) return false;
+      return Object.entries(expected).every(([k, v]) => stored[k] === v);
+    })
+    .toBe(true);
+}
