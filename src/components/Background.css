@@ -1,0 +1,87 @@
+/* Background（§10.2 夜空・星・グラデーション）。transform / opacity のみをアニメーションする */
+
+.typoria-background {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--color-bg) 0%, var(--color-bg-gradient) 100%);
+  --bg-accent: var(--color-bg-gradient);
+}
+
+.typoria-background[data-mode="combo"] {
+  --bg-accent: #3b4a9a;
+}
+
+.typoria-background[data-mode="fever"] {
+  --bg-accent: var(--color-fever);
+}
+
+.typoria-background__glow {
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(circle at 50% 110%, var(--bg-accent) 0%, transparent 60%);
+  opacity: calc(0.25 + var(--bg-intensity, 0) * 0.5);
+  transition:
+    opacity 500ms ease,
+    background 500ms ease;
+  will-change: opacity, transform;
+}
+
+.typoria-background[data-mode="fever"] .typoria-background__glow {
+  opacity: 0.85;
+  animation: typoria-bg-pulse 1.6s ease-in-out infinite;
+}
+
+.typoria-background__stars {
+  position: absolute;
+  inset: 0;
+}
+
+.typoria-background__star {
+  position: absolute;
+  border-radius: 9999px;
+  background: var(--color-text);
+  animation-name: typoria-bg-twinkle;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  will-change: opacity, transform;
+}
+
+.typoria-background[data-mode="combo"] .typoria-background__star {
+  animation-duration: 1.5s !important;
+}
+
+.typoria-background[data-mode="fever"] .typoria-background__star {
+  background: var(--color-perfect);
+  animation-duration: 0.8s !important;
+}
+
+@keyframes typoria-bg-twinkle {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.6);
+    opacity: 1;
+  }
+}
+
+@keyframes typoria-bg-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+.typoria-background[data-reduced-motion="true"] *,
+.typoria-background[data-reduced-motion="true"] {
+  animation: none !important;
+  transition: none !important;
+}

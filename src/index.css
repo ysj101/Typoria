@@ -1,4 +1,23 @@
 @import "tailwindcss";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/700.css";
+@import "@fontsource/noto-sans-jp/400.css";
+@import "@fontsource/noto-sans-jp/700.css";
+
+/* デザイン基盤（docs/spec.md §10.2 カラーパレット、§10.3 フォント） */
+@theme {
+  --color-bg: #0b1026;
+  --color-bg-gradient: #1b2559;
+  --color-text: #f8fafc;
+  --color-subtext: #94a3b8;
+  --color-correct: #4ade80;
+  --color-incorrect: #f87171;
+  --color-perfect: #facc15;
+  --color-fever: #f472b6;
+
+  --font-sans: "Inter", "Noto Sans JP", system-ui, -apple-system, sans-serif;
+  --font-typing: "Inter", system-ui, -apple-system, sans-serif;
+}
 
 :root {
   color-scheme: dark;
@@ -7,10 +26,15 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: #0b1026;
-  color: #f8fafc;
-  font-family:
-    system-ui,
-    -apple-system,
-    sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+}
+
+/* タイピング対象英文用（§4.2: 文字間隔を広げる） */
+.typing-text {
+  font-family: var(--font-typing);
+  letter-spacing: 0.12em;
+  font-variant-ligatures: none;
+  font-variant-numeric: tabular-nums;
 }
