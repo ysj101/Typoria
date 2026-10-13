@@ -8,7 +8,7 @@ function LayoutInner() {
   return (
     <>
       <Background mode={background.mode} intensity={background.intensity} />
-      <div className="relative min-h-screen text-text">
+      <div className="app-shell relative text-text">
         <Outlet />
       </div>
     </>

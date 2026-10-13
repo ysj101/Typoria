@@ -26,14 +26,14 @@ export const GameHUD = memo(function GameHUD({
       <div className="flex items-end justify-between gap-4 tabular-nums">
         <div>
           <div className="text-xs tracking-widest text-subtext">SCORE</div>
-          <div className="text-3xl font-bold" data-testid="hud-score">
+          <div className="game-hud-value font-bold" data-testid="hud-score">
             {score.toLocaleString()}
           </div>
         </div>
         <ComboDisplay combo={combo} fever={fever} animate={animate} />
         <div className="text-right">
           <div className="text-xs tracking-widest text-subtext">TIME</div>
-          <div className="text-3xl font-bold" data-testid="hud-time">
+          <div className="game-hud-value font-bold" data-testid="hud-time">
             {formatTime(remainingMs)}
           </div>
         </div>

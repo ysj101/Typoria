@@ -35,14 +35,17 @@ export function Home() {
 
   const difficulty = resolveDifficulty(settings.difficultyMode, progress);
   const playedToday = progress.lastPlayedDate === todayKey;
-  // PLAY 操作で AudioContext を unlock してからゲームへ（自動再生制限対応 §9.2）
-  const onPlay = () => {
+  // PLAY の click に加え、touchstart / touchend でも unlock する（iOS Chrome §9.2）
+  const unlockAudio = () => {
     void getSharedAudioEngine().unlock();
+  };
+  const onPlay = () => {
+    unlockAudio();
     nav.toGame();
   };
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-xl flex-col items-center justify-center gap-8 px-4 py-10">
+    <main className="screen-scroll screen-center mx-auto w-full max-w-xl items-center gap-8 px-4 py-10">
       <header className="flex flex-col items-center gap-2 text-center">
         <h1 className="text-5xl font-bold tracking-widest sm:text-6xl">Typoria</h1>
         <p className="text-subtext">タイピングで英語を学ぶ、90 秒のゲーム。</p>
@@ -52,6 +55,8 @@ export function Home() {
         type="button"
         autoFocus
         onClick={onPlay}
+        onTouchStart={unlockAudio}
+        onTouchEnd={unlockAudio}
         className="rounded-full bg-perfect px-12 py-4 text-2xl font-bold text-bg shadow-lg transition-transform hover:scale-105 focus:outline-none focus-visible:ring-4 focus-visible:ring-fever"
       >
         PLAY
@@ -102,11 +107,20 @@ export function Home() {
         </ul>
       </section>
 
-      <nav aria-label="メニュー" className="flex gap-8 text-subtext">
-        <Link to={ROUTES.history} className="underline-offset-4 hover:text-text hover:underline">
+      <nav
+        aria-label="メニュー"
+        className="flex flex-wrap items-center justify-center gap-2 text-subtext"
+      >
+        <Link
+          to={ROUTES.history}
+          className="px-3 underline-offset-4 hover:text-text hover:underline"
+        >
           学習履歴
         </Link>
-        <Link to={ROUTES.settings} className="underline-offset-4 hover:text-text hover:underline">
+        <Link
+          to={ROUTES.settings}
+          className="px-3 underline-offset-4 hover:text-text hover:underline"
+        >
           設定
         </Link>
       </nav>

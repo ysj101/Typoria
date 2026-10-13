@@ -7,6 +7,7 @@ import { ParticleEffect } from "../components/ParticleEffect";
 import { ScorePopupLayer } from "../components/ScorePopup";
 import { TypingInput } from "../components/TypingInput";
 import "../components/GameFx.css";
+import "../components/GameScreen.css";
 import { QUESTIONS } from "../data/questions";
 import { resolveDifficulty } from "../game/difficulty";
 import { selectWeakQuestions } from "../game/questions";
@@ -17,6 +18,7 @@ import { useGameAudio } from "../hooks/useGameAudio";
 import { useGameFx } from "../hooks/useGameFx";
 import { useKeyboard } from "../hooks/useKeyboard";
 import { useReducedMotion } from "../hooks/useReducedMotion";
+import { useVisualViewport } from "../hooks/useVisualViewport";
 import { db } from "../storage";
 import type { Difficulty, Question, QuestionStat } from "../types/game";
 
@@ -42,6 +44,7 @@ export interface GameProps {
 /** ゲーム画面（docs/spec.md §4.2, §3, §13.2, AC-01〜AC-05, AC-15） */
 export function Game({ database = db, questions = QUESTIONS, createGameEngine }: GameProps) {
   const { settings, progress } = useAppContext();
+  const { compact } = useVisualViewport();
   const [weakIds, setWeakIds] = useState<string[] | null>(null);
   const difficulty = resolveDifficulty(settings.difficultyMode, progress);
 
@@ -62,10 +65,10 @@ export function Game({ database = db, questions = QUESTIONS, createGameEngine }:
   }, [database]);
 
   return (
-    <div className="min-h-screen" aria-busy={weakIds === null}>
+    <div className="flex w-full min-w-0 flex-1 flex-col" aria-busy={weakIds === null}>
       <h1 className="sr-only">Game</h1>
       {weakIds === null ? (
-        <p className="flex min-h-screen items-center justify-center text-subtext">Loading...</p>
+        <p className="flex flex-1 items-center justify-center text-subtext">Loading...</p>
       ) : (
         <GameSession
           difficulty={difficulty}
@@ -73,6 +76,7 @@ export function Game({ database = db, questions = QUESTIONS, createGameEngine }:
           weakQuestionIds={weakIds}
           database={database}
           createGameEngine={createGameEngine}
+          compact={compact}
         />
       )}
     </div>
@@ -85,6 +89,7 @@ interface GameSessionProps {
   weakQuestionIds: string[];
   database: GameDatabase;
   createGameEngine?: UseGameOptions["createGameEngine"];
+  compact: boolean;
 }
 
 function GameSession({
@@ -93,6 +98,7 @@ function GameSession({
   weakQuestionIds,
   database,
   createGameEngine,
+  compact,
 }: GameSessionProps) {
   const nav = useAppNavigate();
   const { refresh, settings } = useAppContext();
@@ -104,7 +110,7 @@ function GameSession({
   });
   // 効果音・BGM の結線（#24）
   useGameAudio(engine, settings);
-  // 直接 /game を開いた場合の保険: 最初の操作で AudioContext を unlock する（自動再生制限対応）
+  // 最初の click / touch で AudioContext を unlock する（iOS Chrome はタッチ操作が必須）
   const unlockAudio = useCallback(() => {
     void getSharedAudioEngine().unlock();
   }, []);
@@ -233,13 +239,18 @@ function GameSession({
       ref={containerRef}
       tabIndex={-1}
       aria-label="ゲーム"
-      className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-10 px-4 py-6 outline-none"
+      className={`game-screen outline-none${compact ? " game-screen--compact" : ""}`}
       data-testid="game"
       data-state={snapshot.state}
+      data-compact={compact ? "true" : "false"}
       onKeyDownCapture={unlockAudio}
       onClickCapture={unlockAudio}
       onMouseDown={keepSoftKeyboard}
       onTouchStart={keepSoftKeyboard}
+      onPointerDownCapture={unlockAudio}
+      onTouchStartCapture={unlockAudio}
+      onTouchEndCapture={unlockAudio}
+      onContextMenu={(event) => event.preventDefault()}
       data-shake={fx.shakeAttr}
     >
       <input
@@ -257,60 +268,56 @@ function GameSession({
         defaultValue=""
       />
       {settings.particles && <ParticleEffect particles={fx.particles} />}
-      <GameHUD
-        score={snapshot.score}
-        remainingMs={snapshot.remainingMs}
-        combo={snapshot.combo}
-        fever={snapshot.fever}
-        animate={fx.animate}
-      />
+      <div className="game-screen__column">
+        <GameHUD
+          score={snapshot.score}
+          remainingMs={snapshot.remainingMs}
+          combo={snapshot.combo}
+          fever={snapshot.fever}
+          animate={fx.animate}
+        />
 
-      <div
-        className="relative flex flex-1 flex-col items-center justify-center"
-        data-testid="problem-area"
-      >
-        {snapshot.state === "COUNTDOWN" && (
-          <Countdown remainingMs={snapshot.countdownRemainingMs} />
-        )}
-        {snapshot.question && snapshot.typing && snapshot.state !== "COUNTDOWN" && (
-          <div className="relative w-full">
-            <ScorePopupLayer popups={fx.popups} animate={fx.animate} />
-            {fx.ghost && (
+        <div className="game-playfield" data-testid="problem-area">
+          {snapshot.state === "COUNTDOWN" && (
+            <Countdown remainingMs={snapshot.countdownRemainingMs} />
+          )}
+          {snapshot.question && snapshot.typing && snapshot.state !== "COUNTDOWN" && (
+            <div className="relative w-full min-w-0">
+              <ScorePopupLayer popups={fx.popups} animate={fx.animate} />
+              {fx.ghost && (
+                <TypingInput
+                  key={fx.ghost.id}
+                  question={fx.ghost.question}
+                  typing={{
+                    answer: fx.ghost.question.answer,
+                    cursor: fx.ghost.question.answer.length,
+                    correctKeystrokes: 0,
+                    incorrectKeystrokes: 0,
+                    lastInput: null,
+                    completed: true,
+                  }}
+                  ghost
+                />
+              )}
               <TypingInput
-                key={fx.ghost.id}
-                question={fx.ghost.question}
-                typing={{
-                  answer: fx.ghost.question.answer,
-                  cursor: fx.ghost.question.answer.length,
-                  correctKeystrokes: 0,
-                  incorrectKeystrokes: 0,
-                  lastInput: null,
-                  completed: true,
-                }}
-                ghost
+                question={snapshot.question}
+                typing={snapshot.typing}
+                charAnimKey={fx.animate ? fx.charAnimKey : undefined}
               />
-            )}
-            <TypingInput
-              question={snapshot.question}
-              typing={snapshot.typing}
-              charAnimKey={fx.animate ? fx.charAnimKey : undefined}
-            />
-          </div>
-        )}
-        {snapshot.state === "FINISHED" && (
-          <p className="mt-8 text-2xl font-bold text-perfect" role="status">
-            TIME UP!
-          </p>
-        )}
-      </div>
+            </div>
+          )}
+          {snapshot.state === "FINISHED" && (
+            <p className="text-2xl font-bold text-perfect" role="status">
+              TIME UP!
+            </p>
+          )}
+        </div>
 
-      <p className="sr-only" aria-live="polite" data-testid="game-announcement">
-        {announcement}
-      </p>
+        <p className="sr-only" aria-live="polite" data-testid="game-announcement">
+          {announcement}
+        </p>
 
-      <footer className="flex flex-wrap items-center justify-between gap-2 text-sm text-subtext">
-        <span>Esc: 一時停止</span>
-        <div className="flex flex-wrap items-center gap-2">
+        <footer className="game-footer text-subtext">
           {keyboardOpen && (
             <button
               type="button"
@@ -321,21 +328,29 @@ function GameSession({
                 focusTypingInput();
               }}
               onClick={focusTypingInput}
-              className="rounded-full border border-subtext px-4 py-1.5 hover:border-text hover:text-text"
+              className="game-footer__button hover:border-text hover:text-text"
             >
               キーボードを開く
             </button>
           )}
           <button
             type="button"
+            onClick={onPause}
+            disabled={snapshot.state !== "PLAYING"}
+            className="game-footer__button hover:border-text hover:text-text"
+          >
+            一時停止
+          </button>
+          <button
+            type="button"
             onClick={onSkip}
             disabled={snapshot.state !== "PLAYING"}
-            className="rounded-full border border-subtext px-4 py-1.5 hover:border-text hover:text-text disabled:opacity-60"
+            className="game-footer__button hover:border-text hover:text-text"
           >
-            スキップ（Ctrl + Enter）
+            スキップ<span className="game-footer__hint">（Ctrl + Enter）</span>
           </button>
-        </div>
-      </footer>
+        </footer>
+      </div>
 
       {snapshot.state === "PAUSED" && (
         <PauseOverlay onResume={resumeAndFocus} onQuit={() => engine.abort()} />
@@ -348,7 +363,7 @@ function Countdown({ remainingMs }: { remainingMs: number }) {
   const n = Math.max(1, Math.ceil(remainingMs / 1000));
   return (
     <div
-      className="text-8xl font-bold tabular-nums text-perfect"
+      className="game-countdown font-bold tabular-nums text-perfect"
       role="timer"
       aria-live="assertive"
       data-testid="countdown"
@@ -388,12 +403,12 @@ function PauseOverlay({ onResume, onQuit }: { onResume: () => void; onQuit: () =
       aria-modal="true"
       aria-label="一時停止"
       onKeyDown={onKeyDown}
-      className="fixed inset-0 z-10 flex flex-col items-center justify-center gap-6 bg-bg/80 backdrop-blur-sm"
+      className="pause-overlay fixed inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-bg/80 backdrop-blur-sm"
       data-testid="pause-overlay"
     >
-      <p className="text-4xl font-bold tracking-widest">PAUSED</p>
+      <p className="pause-title text-4xl font-bold tracking-widest">PAUSED</p>
       <p className="text-subtext">Esc で再開</p>
-      <div className="flex gap-4">
+      <div className="flex flex-wrap justify-center gap-4">
         <button
           type="button"
           onClick={onResume}

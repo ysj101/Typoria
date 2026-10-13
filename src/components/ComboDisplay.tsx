@@ -25,7 +25,7 @@ export const ComboDisplay = memo(function ComboDisplay({
       <div
         // key を combo にすることで数字が変わるたびにアニメーションを再始動する
         key={combo}
-        className={`fx-combo text-3xl font-bold tabular-nums ${fever ? "text-fever" : combo > 0 ? "text-perfect" : "text-subtext"}`}
+        className={`fx-combo game-combo-value font-bold tabular-nums ${fever ? "text-fever" : combo > 0 ? "text-perfect" : "text-subtext"}`}
         data-testid="combo-value"
         data-fever={fever ? "true" : "false"}
         data-animate={animate && combo > 0 ? "scale" : "none"}

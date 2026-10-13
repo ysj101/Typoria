@@ -3,7 +3,8 @@
  * 仕様: docs/spec.md §9.2 サウンド、§4.5 設定、§18.2 入力速度を最優先
  *
  * - SE / BGM はすべてオシレーター合成（音源ファイル不要）
- * - `unlock()` を PLAY 操作後に呼ぶまで AudioContext を生成しない（自動再生制限対応）
+ * - `unlock()` を最初のユーザー操作（click / touch）で呼ぶまで AudioContext を生成しない
+ * - `resume()` は unlock() の呼び出しスタック上で同期的に開始する（iOS Chrome）
  * - `play()` は同期的に発火し、unlock 前・無効時は例外を出さず無視する
  */
 import type { Settings } from "../types/game";
@@ -80,13 +81,14 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
   let bgmGain: GainNode | null = null;
   let feverGain: GainNode | null = null;
   let unlocked = false;
-  let unlocking: Promise<void> | null = null;
 
   let sfxEnabled = true;
   let bgmEnabled = true;
   let sfxVolume = 70;
   let bgmVolume = 40;
   let feverOn = false;
+  /** unlock 前に startBgm されたら、resume 完了後に鳴らす */
+  let bgmWanted = false;
 
   // BGM state
   let bgmVoices: Voice[] = [];
@@ -102,33 +104,50 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     bgmGain.gain.setValueAtTime(volumeToGain(bgmVolume), t);
   }
 
-  async function unlock(): Promise<void> {
-    if (unlocked) return;
-    if (unlocking) return unlocking;
-    unlocking = (async () => {
-      const created = options.createContext ? options.createContext() : defaultCreateContext();
-      if (!created) return;
-      ctx = created;
-      sfxGain = ctx.createGain();
-      bgmGain = ctx.createGain();
-      feverGain = ctx.createGain();
-      sfxGain.connect(ctx.destination);
-      bgmGain.connect(ctx.destination);
-      feverGain.gain.setValueAtTime(0, ctx.currentTime);
-      feverGain.connect(bgmGain);
-      applyGains();
+  function unlock(): Promise<void> {
+    // 走行中なら何もしない。suspended のままなら次のタッチで resume をやり直す
+    if (unlocked && ctx && ctx.state === "running") return Promise.resolve();
+
+    if (!ctx) {
+      let created: AudioContext | null = null;
       try {
-        await ctx.resume();
+        created = options.createContext ? options.createContext() : defaultCreateContext();
       } catch {
-        // resume に失敗しても例外は外に出さない（ユーザー操作待ち）
+        created = null;
       }
-      unlocked = true;
-    })();
-    try {
-      await unlocking;
-    } finally {
-      unlocking = null;
+      if (!created) return Promise.resolve();
+      ctx = created;
+      try {
+        sfxGain = ctx.createGain();
+        bgmGain = ctx.createGain();
+        feverGain = ctx.createGain();
+        sfxGain.connect(ctx.destination);
+        bgmGain.connect(ctx.destination);
+        feverGain.gain.setValueAtTime(0, ctx.currentTime);
+        feverGain.connect(bgmGain);
+        applyGains();
+      } catch {
+        return Promise.resolve();
+      }
     }
+
+    // resume() は await より前、ユーザー操作の呼び出しスタック上で開始する
+    let resumePromise: Promise<void>;
+    try {
+      resumePromise = Promise.resolve(ctx.resume()).then(() => undefined);
+    } catch {
+      resumePromise = Promise.resolve();
+    }
+
+    return resumePromise
+      .catch(() => {
+        // resume に失敗しても例外は外に出さない（次のタップで再試行）
+      })
+      .then(() => {
+        if (!ctx) return;
+        unlocked = true;
+        if (bgmWanted && bgmEnabled) startBgm();
+      });
   }
 
   /** 1 音を ADSR 風エンベロープで鳴らす */
@@ -218,7 +237,12 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
   }
 
   function startBgm(): void {
-    if (!unlocked || !ctx || !bgmGain || !feverGain || !bgmEnabled) return;
+    if (!bgmEnabled) {
+      bgmWanted = false;
+      return;
+    }
+    bgmWanted = true;
+    if (!unlocked || !ctx || !bgmGain || !feverGain) return;
     if (bgmVoices.length > 0) return;
     const t = ctx.currentTime;
 
@@ -291,6 +315,7 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
   }
 
   function stopBgm(): void {
+    bgmWanted = false;
     if (bgmTimer !== null) {
       clearInterval(bgmTimer);
       bgmTimer = null;
