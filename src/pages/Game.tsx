@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type React from "react";
 import { useAppNavigate } from "../app/navigation";
 import { useAppContext } from "../app/useAppContext";
 import { GameHUD } from "../components/GameHUD";
@@ -113,8 +114,13 @@ function GameSession({
   const onSkip = useCallback(() => engine.skip(), [engine]);
   const onPause = useCallback(() => {
     const state = engine.getSnapshot().state;
-    if (state === "PLAYING") engine.pause();
-    else if (state === "PAUSED") engine.resume();
+    if (state === "PLAYING") {
+      engine.pause();
+    } else if (state === "PAUSED") {
+      engine.resume();
+      // ダイアログを閉じたらゲーム領域にフォーカスを戻す（§14 a11y）
+      containerRef.current?.focus();
+    }
   }, [engine]);
   useKeyboard({
     enabled: snapshot.state === "PLAYING" || snapshot.state === "PAUSED",
@@ -162,6 +168,14 @@ function GameSession({
     })();
   }, [snapshot.state, engine]);
 
+  // スコア・コンボの控えめな通知（§14: 問題クリア時のみ更新）
+  const clearedCount = snapshot.solved + snapshot.skipped;
+  const announcement = useMemo(() => {
+    if (clearedCount === 0) return "";
+    const s = engine.getSnapshot();
+    return `${s.solved} 問クリア、スコア ${s.score}、コンボ ${s.combo}`;
+  }, [clearedCount, engine]);
+
   const resumeAndFocus = useCallback(() => {
     engine.resume();
     containerRef.current?.focus();
@@ -199,13 +213,17 @@ function GameSession({
         )}
       </div>
 
-      <footer className="flex items-center justify-between text-sm text-subtext">
+      <p className="sr-only" aria-live="polite" data-testid="game-announcement">
+        {announcement}
+      </p>
+
+      <footer className="flex flex-wrap items-center justify-between gap-2 text-sm text-subtext">
         <span>Esc: 一時停止</span>
         <button
           type="button"
           onClick={onSkip}
           disabled={snapshot.state !== "PLAYING"}
-          className="rounded-full border border-subtext/40 px-4 py-1.5 hover:border-text hover:text-text disabled:opacity-40"
+          className="rounded-full border border-subtext px-4 py-1.5 hover:border-text hover:text-text disabled:opacity-60"
         >
           スキップ（Ctrl + Enter）
         </button>
@@ -233,11 +251,34 @@ function Countdown({ remainingMs }: { remainingMs: number }) {
 }
 
 function PauseOverlay({ onResume, onQuit }: { onResume: () => void; onQuit: () => void }) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  // フォーカストラップ: Tab / Shift+Tab がダイアログ内のボタンを循環する（§14 a11y）
+  const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== "Tab" || !dialogRef.current) return;
+    const focusable = Array.from(
+      dialogRef.current.querySelectorAll<HTMLElement>("button:not([disabled])"),
+    );
+    if (focusable.length === 0) return;
+    const first = focusable[0]!;
+    const last = focusable[focusable.length - 1]!;
+    const active = document.activeElement;
+    if (e.shiftKey && (active === first || !dialogRef.current.contains(active))) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && active === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }, []);
+
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label="一時停止"
+      onKeyDown={onKeyDown}
       className="fixed inset-0 z-10 flex flex-col items-center justify-center gap-6 bg-bg/80 backdrop-blur-sm"
       data-testid="pause-overlay"
     >
@@ -255,7 +296,7 @@ function PauseOverlay({ onResume, onQuit }: { onResume: () => void; onQuit: () =
         <button
           type="button"
           onClick={onQuit}
-          className="rounded-full border border-subtext px-8 py-3 text-subtext hover:text-text"
+          className="rounded-full border border-subtext px-8 py-3 text-subtext hover:text-text focus-visible:ring-4 focus-visible:ring-fever"
         >
           やめる
         </button>

@@ -29,7 +29,10 @@ export const TypingInput = memo(function TypingInput({ question, typing }: Typin
         {question.japanese}
       </p>
       {question.type === "fill_blank" && (
-        <p className="typing-text text-2xl text-text/80 sm:text-3xl" data-testid="question-english">
+        <p
+          className="typing-text max-w-full break-words text-2xl text-text sm:text-3xl"
+          data-testid="question-english"
+        >
           {before}
           <span className="rounded border-b-2 border-subtext px-1 text-perfect">
             {typing.answer}
@@ -38,7 +41,7 @@ export const TypingInput = memo(function TypingInput({ question, typing }: Typin
         </p>
       )}
       <p
-        className="typing-text text-4xl font-bold sm:text-6xl"
+        className="typing-text max-w-full break-words text-4xl font-bold sm:text-6xl"
         data-testid="answer"
         data-last-input={typing.lastInput ?? "none"}
         aria-label={`入力対象: ${typing.answer}`}
@@ -59,7 +62,7 @@ export const TypingInput = memo(function TypingInput({ question, typing }: Typin
                 ? "text-incorrect"
                 : state === "current"
                   ? "text-text underline decoration-perfect underline-offset-8"
-                  : "text-subtext/60";
+                  : "text-subtext";
           return (
             <span key={i} data-state={state} className={`inline-block ${color}`}>
               {ch === " " ? " " : ch}

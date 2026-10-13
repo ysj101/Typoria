@@ -163,7 +163,12 @@ export function ResultView({
     >
       <h1 className="text-2xl font-bold tracking-[0.3em] text-subtext">RESULT</h1>
 
-      <div className="flex gap-2 text-4xl" aria-label={`${stars} stars`} data-testid="stars">
+      <div
+        className="flex gap-2 text-4xl"
+        role="img"
+        aria-label={`${stars} stars`}
+        data-testid="stars"
+      >
         {[1, 2, 3, 4, 5].map((i) => {
           const lit = i <= phase.starsShown;
           return (
