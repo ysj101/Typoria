@@ -10,3 +10,4 @@ playwright/.cache
 *.local
 .env
 *.tsbuildinfo
+.claude/worktrees
