@@ -76,6 +76,7 @@ jobs:
       - name: Install Playwright system dependencies
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: pnpm exec playwright install-deps chromium
+      # chromium と mobile-chrome（package.json の test:e2e）。キャッシュキーは変えない。
       - run: pnpm test:e2e
       - name: Upload Playwright report
         if: failure()

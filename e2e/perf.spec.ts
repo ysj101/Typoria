@@ -5,7 +5,10 @@ import { expect, test, type Page } from "@playwright/test";
  * 閾値はヘッドレス環境の揺らぎを考慮した余裕値。計測値はレポートに attach する。
  */
 test.describe("performance", () => {
-  test.skip(({ browserName }) => browserName !== "chromium", "chromium で計測する");
+  test.skip(
+    ({ browserName }) => browserName !== "chromium" || test.info().project.name !== "chromium",
+    "desktop chromium で計測する",
+  );
 
   async function startPlaying(page: Page) {
     await page.goto("/");

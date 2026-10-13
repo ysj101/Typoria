@@ -12,10 +12,13 @@ export default defineConfig({
     baseURL: `http://localhost:${port}`,
     trace: "on-first-retry",
   },
-  // 既定（pnpm test:e2e / CI）は chromium のみ。webkit（Safari 相当）は pnpm test:e2e:all で実行する。
+  // 既定（pnpm test:e2e / CI）は chromium と mobile-chrome。
+  // webkit（Safari 相当）は pnpm test:e2e:all に残す。
   // Edge は Chromium ベースのため chromium の結果で代替する（docs/verification.md）。
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    // Pixel 7 は hasTouch: true / isMobile: true。対象ブラウザは Chrome のみ（#61）。
+    { name: "mobile-chrome", use: { ...devices["Pixel 7"] } },
     { name: "webkit", use: { ...devices["Desktop Safari"] } },
   ],
   webServer: {

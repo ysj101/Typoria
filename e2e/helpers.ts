@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 export const COUNTDOWN_MS = 3_000;
 export const GAME_DURATION_MS = 90_000;
@@ -34,11 +34,30 @@ export function typedCount(page: Page) {
   return page.getByTestId("answer").locator("span[data-state=typed]");
 }
 
+/** mobile-chrome はソフトキーボード（insertText）。desktop は物理キー（#61） */
+export function usesSoftKeyboard(): boolean {
+  return test.info().project.name === "mobile-chrome";
+}
+
+/**
+ * 解答の文字を入れる。
+ * mobile-chrome では `page.keyboard.type` を使わず、フォーカス中の input へ `insertText` する。
+ */
+export async function typeChars(page: Page, text: string) {
+  if (!usesSoftKeyboard()) {
+    await page.keyboard.type(text);
+    return;
+  }
+  const input = page.getByTestId("soft-keyboard-input");
+  await input.focus();
+  for (const ch of text) await page.keyboard.insertText(ch);
+}
+
 /** 現在の問題を誤入力なしで打ち切る */
 export async function typeAnswer(page: Page) {
   const id = await currentQuestionId(page);
   const answer = await readAnswer(page);
-  await page.keyboard.type(answer);
+  await typeChars(page, answer);
   await expect(page.getByTestId("typing-input")).not.toHaveAttribute("data-question-id", id);
 }
 

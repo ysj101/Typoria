@@ -62,6 +62,39 @@ describe("Settings page (§4.5)", () => {
     expect(screen.getByRole("radio", { name: "自動調整" })).toBeChecked();
   });
 
+  it("keeps every patch when settings writes overlap", async () => {
+    const memory = createMemoryStorage();
+    let releaseFirst: () => void = () => {};
+    const firstWrite = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+    let writes = 0;
+    const storage = {
+      ...memory,
+      async putSettings(next: Parameters<typeof memory.putSettings>[0]) {
+        writes += 1;
+        if (writes === 1) await firstWrite;
+        await memory.putSettings(next);
+      },
+    };
+    render(
+      <AppProvider storage={storage}>
+        <MemoryRouter>
+          <Settings />
+        </MemoryRouter>
+      </AppProvider>,
+    );
+    await waitReady();
+    await userEvent.click(screen.getByRole("switch", { name: "効果音" }));
+    await userEvent.click(screen.getByRole("switch", { name: "BGM" }));
+    releaseFirst();
+    await waitFor(async () => {
+      const saved = await memory.getSettings();
+      expect(saved.sfxEnabled).toBe(false);
+      expect(saved.bgmEnabled).toBe(false);
+    });
+  });
+
   it("persists turning sound effects off", async () => {
     const { storage } = setup();
     await waitReady();

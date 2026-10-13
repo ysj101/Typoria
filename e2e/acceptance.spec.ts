@@ -10,6 +10,7 @@ import {
   readAnswer,
   startGame,
   typeAnswer,
+  typeChars,
   typedCount,
   wrongCharFor,
 } from "./helpers";
@@ -46,10 +47,10 @@ test.describe("受け入れ基準 §16", () => {
   test("AC-03 正しい文字でカーソルが進み、誤った文字では進まない", async ({ page }) => {
     await startGame(page);
     const answer = await readAnswer(page);
-    await page.keyboard.type(wrongCharFor(answer));
+    await typeChars(page, wrongCharFor(answer));
     await expect(typedCount(page)).toHaveCount(0);
     await expect(page.getByTestId("answer")).toHaveAttribute("data-last-input", "incorrect");
-    await page.keyboard.type(answer[0]!);
+    await typeChars(page, answer[0]!);
     await expect(typedCount(page)).toHaveCount(1);
     await expect(page.getByTestId("answer")).toHaveAttribute("data-last-input", "correct");
   });
@@ -58,10 +59,10 @@ test.describe("受け入れ基準 §16", () => {
     await startGame(page);
     const id = await currentQuestionId(page);
     const answer = await readAnswer(page);
-    await page.keyboard.type(answer[0]!);
-    await page.keyboard.type(wrongCharFor(answer));
+    await typeChars(page, answer[0]!);
+    await typeChars(page, wrongCharFor(answer));
     await expect(typedCount(page)).toHaveCount(1);
-    await page.keyboard.type(answer.slice(1));
+    await typeChars(page, answer.slice(1));
     await expect(page.getByTestId("typing-input")).not.toHaveAttribute("data-question-id", id);
     // 誤入力があったので PERFECT ではない（easy 100 点）
     await expect(page.getByTestId("hud-score")).toHaveText("100");
@@ -196,7 +197,7 @@ test.describe("受け入れ基準 §16", () => {
     }, first);
     await expect(typedCount(page)).toHaveCount(0);
     await expect(page.getByTestId("answer")).toHaveAttribute("data-last-input", "none");
-    await page.keyboard.type(first);
+    await typeChars(page, first);
     await expect(typedCount(page)).toHaveCount(1);
   });
 
@@ -208,6 +209,39 @@ test.describe("受け入れ基準 §16", () => {
     await expect(page.getByTestId("game")).toHaveAttribute("data-state", "COUNTDOWN");
   });
 });
+
+/** 設定の IndexedDB 書き込みが終わってから遷移する（並列実行で先行書き込みが遅れても読む） */
+async function waitForStoredSettings(
+  page: Page,
+  expected: { sfxEnabled?: boolean; bgmEnabled?: boolean; particles?: boolean },
+) {
+  await expect
+    .poll(async () =>
+      page.evaluate(async () => {
+        const db = await new Promise<IDBDatabase>((resolve, reject) => {
+          const open = indexedDB.open("typoria");
+          open.onerror = () => reject(open.error);
+          open.onsuccess = () => resolve(open.result);
+        });
+        const stored = await new Promise<{
+          sfxEnabled?: boolean;
+          bgmEnabled?: boolean;
+          particles?: boolean;
+        }>((resolve, reject) => {
+          const tx = db.transaction("settings", "readonly");
+          const req = tx.objectStore("settings").get("settings");
+          req.onerror = () => reject(req.error);
+          req.onsuccess = () => resolve(req.result ?? {});
+        });
+        return {
+          sfxEnabled: stored.sfxEnabled ?? true,
+          bgmEnabled: stored.bgmEnabled ?? true,
+          particles: stored.particles ?? true,
+        };
+      }),
+    )
+    .toMatchObject(expected);
+}
 
 /** AudioContext の生成とオシレーターの start 回数を記録する */
 async function recordAudio(page: Page) {
@@ -250,6 +284,7 @@ test.describe("受け入れ基準 §16（設定）", () => {
     const bgm = page.getByRole("switch", { name: "BGM" });
     await bgm.click();
     await expect(bgm).toHaveAttribute("aria-checked", "false");
+    await waitForStoredSettings(page, { sfxEnabled: false, bgmEnabled: false });
 
     await page.reload();
     await expect(page.getByRole("switch", { name: "効果音" })).toHaveAttribute(
@@ -258,7 +293,7 @@ test.describe("受け入れ基準 §16（設定）", () => {
     );
     await startGame(page);
     await clearQuestions(page, 2);
-    await page.keyboard.type("z");
+    await typeChars(page, "z");
     const audio = await page.evaluate(
       () => (window as unknown as { __audio: { oscillators: number } }).__audio,
     );
@@ -271,6 +306,7 @@ test.describe("受け入れ基準 §16（設定）", () => {
     const particles = page.getByRole("switch", { name: "パーティクル" });
     await particles.click();
     await expect(particles).toHaveAttribute("aria-checked", "false");
+    await waitForStoredSettings(page, { particles: false });
     await startGame(page);
     await clearQuestions(page, 3);
     await expect(page.getByTestId("particles")).toHaveCount(0);

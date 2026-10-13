@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { typeChars } from "./helpers";
 
 test.describe("game screen", () => {
   test("counts down, accepts typing and clears a question", async ({ page }) => {
@@ -14,7 +15,7 @@ test.describe("game screen", () => {
       "",
     );
     const questionId = await page.getByTestId("typing-input").getAttribute("data-question-id");
-    await page.keyboard.type(answer);
+    await typeChars(page, answer);
     await expect(page.getByTestId("combo-value")).toHaveText("1");
     await expect(page.getByTestId("typing-input")).not.toHaveAttribute(
       "data-question-id",

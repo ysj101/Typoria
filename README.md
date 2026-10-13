@@ -13,15 +13,15 @@ pnpm dev
 
 ## スクリプト
 
-| コマンド            | 内容                                                                          |
-| ------------------- | ----------------------------------------------------------------------------- |
-| `pnpm dev`          | 開発サーバー起動                                                              |
-| `pnpm build`        | 型チェック + 本番ビルド                                                       |
-| `pnpm preview`      | ビルド成果物のプレビュー                                                      |
-| `pnpm lint`         | ESLint + Prettier チェック                                                    |
-| `pnpm test`         | 単体テスト（Vitest）                                                          |
-| `pnpm test:e2e`     | E2E テスト（Playwright、chromium）                                            |
-| `pnpm test:e2e:all` | E2E テスト（chromium + webkit。`pnpm exec playwright install webkit` が必要） |
+| コマンド            | 内容                                                                      |
+| ------------------- | ------------------------------------------------------------------------- |
+| `pnpm dev`          | 開発サーバー起動                                                          |
+| `pnpm build`        | 型チェック + 本番ビルド                                                   |
+| `pnpm preview`      | ビルド成果物のプレビュー                                                  |
+| `pnpm lint`         | ESLint + Prettier チェック                                                |
+| `pnpm test`         | 単体テスト（Vitest）                                                      |
+| `pnpm test:e2e`     | E2E テスト（Playwright、chromium + mobile-chrome）                        |
+| `pnpm test:e2e:all` | E2E テスト（上記 + webkit。`pnpm exec playwright install webkit` が必要） |
 
 初回の E2E 実行前に `pnpm exec playwright install chromium` が必要です。
 
