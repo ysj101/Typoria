@@ -24,6 +24,10 @@ npm run dev
 
 初回の E2E 実行前に `npx playwright install chromium` が必要です。
 
+## アクセシビリティ確認
+
+`npm run test:e2e -- e2e/a11y.spec.ts` で、各画面の axe（重大な違反ゼロ）、モバイル幅での横スクロールなし、キーボード操作（フォーカストラップ・Tab 順序）を確認できます。
+
 ## オフライン対応
 
 PWA（Service Worker）により、初回読み込み後はオフラインでもプレイできます。
