@@ -322,14 +322,6 @@ function GameSession({
         </p>
 
         <footer className="game-footer text-subtext">
-          <button
-            type="button"
-            onClick={onPause}
-            disabled={snapshot.state !== "PLAYING"}
-            className="game-footer__button hover:border-text hover:text-text"
-          >
-            一時停止
-          </button>
           {keyboardOpen && (
             <button
               type="button"
@@ -345,6 +337,14 @@ function GameSession({
               キーボードを開く
             </button>
           )}
+          <button
+            type="button"
+            onClick={onPause}
+            disabled={snapshot.state !== "PLAYING"}
+            className="game-footer__button hover:border-text hover:text-text"
+          >
+            一時停止
+          </button>
           <button
             type="button"
             onClick={onSkip}
