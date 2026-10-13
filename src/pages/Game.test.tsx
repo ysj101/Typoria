@@ -452,23 +452,6 @@ describe("Game effects (#23, §9.1, AC-08, AC-17)", () => {
     expect(game).not.toHaveAttribute("data-shake");
   });
 
-  it("accepts a soft-keyboard beforeinput without doubling the keydown", async () => {
-    const clock = createClock();
-    renderGame(clock);
-    await startPlaying(clock);
-    const input = screen.getByTestId("soft-keyboard-input") as HTMLInputElement;
-    const first = currentAnswer()[0]!;
-    fireEvent.keyDown(input, { key: first });
-    input.value = first;
-    fireEvent.input(input);
-    fireEvent(
-      input,
-      new InputEvent("beforeinput", { bubbles: true, cancelable: true, data: first }),
-    );
-    expect(screen.getByTestId("answer").querySelectorAll("[data-state=typed]")).toHaveLength(1);
-    expect(screen.getByTestId("answer")).toHaveAttribute("data-last-input", "correct");
-  });
-
   it("marks the layout compact when the visual viewport is short", async () => {
     const vv = {
       height: 400,

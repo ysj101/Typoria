@@ -12,6 +12,7 @@ import {
   typeAnswer,
   typeChars,
   typedCount,
+  waitForStoredSettings,
   wrongCharFor,
 } from "./helpers";
 
@@ -210,39 +211,6 @@ test.describe("受け入れ基準 §16", () => {
   });
 });
 
-/** 設定の IndexedDB 書き込みが終わってから遷移する（並列実行で先行書き込みが遅れても読む） */
-async function waitForStoredSettings(
-  page: Page,
-  expected: { sfxEnabled?: boolean; bgmEnabled?: boolean; particles?: boolean },
-) {
-  await expect
-    .poll(async () =>
-      page.evaluate(async () => {
-        const db = await new Promise<IDBDatabase>((resolve, reject) => {
-          const open = indexedDB.open("typoria");
-          open.onerror = () => reject(open.error);
-          open.onsuccess = () => resolve(open.result);
-        });
-        const stored = await new Promise<{
-          sfxEnabled?: boolean;
-          bgmEnabled?: boolean;
-          particles?: boolean;
-        }>((resolve, reject) => {
-          const tx = db.transaction("settings", "readonly");
-          const req = tx.objectStore("settings").get("settings");
-          req.onerror = () => reject(req.error);
-          req.onsuccess = () => resolve(req.result ?? {});
-        });
-        return {
-          sfxEnabled: stored.sfxEnabled ?? true,
-          bgmEnabled: stored.bgmEnabled ?? true,
-          particles: stored.particles ?? true,
-        };
-      }),
-    )
-    .toMatchObject(expected);
-}
-
 /** AudioContext の生成とオシレーターの start 回数を記録する */
 async function recordAudio(page: Page) {
   await page.addInitScript(() => {
@@ -284,6 +252,7 @@ test.describe("受け入れ基準 §16（設定）", () => {
     const bgm = page.getByRole("switch", { name: "BGM" });
     await bgm.click();
     await expect(bgm).toHaveAttribute("aria-checked", "false");
+    // 表示の切り替えは同期だが IndexedDB への保存は非同期。保存前に reload すると書き込みが失われる
     await waitForStoredSettings(page, { sfxEnabled: false, bgmEnabled: false });
 
     await page.reload();

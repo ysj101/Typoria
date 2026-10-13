@@ -43,7 +43,7 @@ export interface GameProps {
 
 /** ゲーム画面（docs/spec.md §4.2, §3, §13.2, AC-01〜AC-05, AC-15） */
 export function Game({ database = db, questions = QUESTIONS, createGameEngine }: GameProps) {
-  const { settings, progress } = useAppContext();
+  const { ready, settings, progress } = useAppContext();
   const { compact } = useVisualViewport();
   const [weakIds, setWeakIds] = useState<string[] | null>(null);
   const difficulty = resolveDifficulty(settings.difficultyMode, progress);
@@ -64,10 +64,14 @@ export function Game({ database = db, questions = QUESTIONS, createGameEngine }:
     };
   }, [database]);
 
+  // 設定・進捗（AppProvider）と苦手問題の両方が揃ってからエンジンを生成する。
+  // 設定の読み込み前に開始すると既定値（効果音 ON など）でゲームが始まってしまう（AC-14）
+  const loading = !ready || weakIds === null;
+
   return (
-    <div className="flex w-full min-w-0 flex-1 flex-col" aria-busy={weakIds === null}>
+    <div className="flex w-full min-w-0 flex-1 flex-col" aria-busy={loading}>
       <h1 className="sr-only">Game</h1>
-      {weakIds === null ? (
+      {loading || weakIds === null ? (
         <p className="flex flex-1 items-center justify-center text-subtext">Loading...</p>
       ) : (
         <GameSession
@@ -245,10 +249,10 @@ function GameSession({
       data-compact={compact ? "true" : "false"}
       onKeyDownCapture={unlockAudio}
       onClickCapture={unlockAudio}
-      onPointerDownCapture={unlockAudio}
       onMouseDown={keepSoftKeyboard}
-      onTouchStartCapture={unlockAudio}
       onTouchStart={keepSoftKeyboard}
+      onPointerDownCapture={unlockAudio}
+      onTouchStartCapture={unlockAudio}
       onTouchEndCapture={unlockAudio}
       onContextMenu={(event) => event.preventDefault()}
       data-shake={fx.shakeAttr}
