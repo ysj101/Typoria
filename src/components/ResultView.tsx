@@ -157,7 +157,7 @@ export function ResultView({
 
   return (
     <main
-      className="flex min-h-screen flex-col items-center justify-center gap-6 p-6 text-text"
+      className="screen-scroll screen-center items-center gap-6 p-6 text-text"
       data-testid="result-view"
       data-animation-done={phase.done ? "true" : "false"}
     >
@@ -187,7 +187,10 @@ export function ResultView({
 
       <div className="text-center">
         <div className="text-sm tracking-widest text-subtext">SCORE</div>
-        <div className="text-6xl font-bold tabular-nums" data-testid="score-display">
+        <div
+          className="max-w-full font-bold tabular-nums text-[clamp(2.25rem,10vw,3.75rem)]"
+          data-testid="score-display"
+        >
           {phase.scoreShown.toLocaleString()}
         </div>
         {isNewRecord && phase.newRecordShown && (
@@ -200,7 +203,7 @@ export function ResultView({
         )}
       </div>
 
-      <dl className="grid grid-cols-2 gap-x-10 gap-y-3 text-center sm:grid-cols-4">
+      <dl className="grid w-full max-w-full grid-cols-2 gap-x-6 gap-y-3 text-center sm:grid-cols-4 sm:gap-x-10">
         <div>
           <dt className="text-xs tracking-widest text-subtext">ACCURACY</dt>
           <dd className="text-2xl font-bold tabular-nums" data-testid="accuracy">
@@ -235,8 +238,8 @@ export function ResultView({
             <span className="tabular-nums">+{sessionXp} XP</span>
           </li>
           {missionRows.map((m) => (
-            <li key={m.id} className="flex justify-between text-perfect">
-              <span>ミッション達成: {m.title}</span>
+            <li key={m.id} className="flex justify-between gap-2 text-perfect">
+              <span className="min-w-0 break-words">ミッション達成: {m.title}</span>
               <span className="tabular-nums">+{m.rewardXP} XP</span>
             </li>
           ))}

@@ -33,21 +33,22 @@ export const TypingInput = memo(function TypingInput({
 
   return (
     <section
-      className={`flex w-full flex-col items-center gap-6 text-center ${ghost ? "fx-ghost pointer-events-none absolute inset-0" : ""}`}
+      className={`typing-surface game-problem flex w-full min-w-0 flex-col items-center text-center ${ghost ? "fx-ghost pointer-events-none absolute inset-0" : ""}`}
+      onContextMenu={(event) => event.preventDefault()}
       aria-label={ghost ? undefined : "問題"}
       aria-hidden={ghost || undefined}
       data-testid={ghost ? "typing-ghost" : "typing-input"}
       data-question-id={question.id}
     >
       <p
-        className="text-xl text-subtext sm:text-2xl"
+        className="game-japanese text-subtext"
         data-testid={ghost ? undefined : "question-japanese"}
       >
         {question.japanese}
       </p>
       {question.type === "fill_blank" && (
         <p
-          className="typing-text max-w-full break-words text-2xl text-text sm:text-3xl"
+          className="typing-text game-english max-w-full break-words text-text"
           data-testid={ghost ? undefined : "question-english"}
         >
           {before}
@@ -58,7 +59,7 @@ export const TypingInput = memo(function TypingInput({
         </p>
       )}
       <p
-        className="typing-text max-w-full break-words text-4xl font-bold sm:text-6xl"
+        className="typing-text game-answer max-w-full break-words font-bold"
         data-testid={ghost ? undefined : "answer"}
         data-last-input={typing.lastInput ?? "none"}
         aria-label={`入力対象: ${typing.answer}`}

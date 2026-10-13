@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RouterProvider } from "react-router";
 import { describe, expect, it, vi } from "vitest";
@@ -100,5 +100,14 @@ describe("Home (§4.1)", () => {
     renderHome();
     await userEvent.click(await screen.findByRole("button", { name: "PLAY" }));
     expect(unlock).toHaveBeenCalledTimes(1);
+  });
+
+  it("unlocks the audio engine on touchstart and touchend (iOS Chrome)", async () => {
+    unlock.mockClear();
+    renderHome();
+    const play = await screen.findByRole("button", { name: "PLAY" });
+    fireEvent.touchStart(play);
+    fireEvent.touchEnd(play);
+    expect(unlock).toHaveBeenCalledTimes(2);
   });
 });

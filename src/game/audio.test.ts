@@ -141,6 +141,39 @@ describe("createAudioEngine", () => {
     expect(contexts).toHaveLength(0);
   });
 
+  it("calls resume synchronously so a touch gesture can unlock iOS Chrome", () => {
+    const pending = engine.unlock();
+    expect(contexts).toHaveLength(1);
+    expect(contexts[0].resume).toHaveBeenCalledTimes(1);
+    return pending;
+  });
+
+  it("calls resume again while the context is still suspended", async () => {
+    const factory = createFakeContextFactory();
+    const custom = createAudioEngine({ createContext: factory.createContext });
+    const first = custom.unlock();
+    factory.contexts[0].state = "suspended";
+    const second = custom.unlock();
+    expect(factory.contexts).toHaveLength(1);
+    expect(factory.contexts[0].resume).toHaveBeenCalledTimes(2);
+    await Promise.all([first, second]);
+    expect(custom.isUnlocked()).toBe(true);
+  });
+
+  it("starts BGM that was requested before unlock", async () => {
+    engine.startBgm();
+    expect(contexts).toHaveLength(0);
+    await engine.unlock();
+    expect(contexts[0].oscillators.length).toBeGreaterThan(0);
+  });
+
+  it("does not start a cancelled BGM after unlock", async () => {
+    engine.startBgm();
+    engine.stopBgm();
+    await engine.unlock();
+    expect(contexts[0].oscillators).toHaveLength(0);
+  });
+
   it("toggles the fever layer gain without creating new oscillators", async () => {
     await engine.unlock();
     engine.startBgm();
