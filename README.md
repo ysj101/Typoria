@@ -1,5 +1,7 @@
 # Typoria
 
+[![CI](https://github.com/ysj101/Typoria/actions/workflows/ci.yml/badge.svg)](https://github.com/ysj101/Typoria/actions/workflows/ci.yml)
+
 タイピングで英語を学ぶ 90 秒のブラウザゲーム。
 
 ## 起動方法
