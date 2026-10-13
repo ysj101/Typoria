@@ -160,26 +160,6 @@
   font-size: 2rem;
 }
 
-/* ソフトキーボードを開くためのキャプチャ。16px 未満だと iOS Chrome がズームする */
-.game-capture {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
-  height: 44px;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  opacity: 0;
-  font-size: 16px;
-  line-height: 16px;
-  color: transparent;
-  background: transparent;
-  caret-color: transparent;
-}
-
 .typing-surface {
   -webkit-user-select: none;
   user-select: none;

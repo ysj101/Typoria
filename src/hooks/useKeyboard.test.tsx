@@ -1,7 +1,12 @@
 import { fireEvent, render, renderHook } from "@testing-library/react";
 import { useRef } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { classifyKeyEvent, useKeyboard, type UseKeyboardOptions } from "./useKeyboard";
+import {
+  classifyBeforeInput,
+  classifyKeyEvent,
+  useKeyboard,
+  type UseKeyboardOptions,
+} from "./useKeyboard";
 
 const key = (overrides: Partial<KeyboardEventInit> & { key: string }) => ({
   ctrlKey: false,
@@ -152,5 +157,132 @@ describe("useKeyboard", () => {
     getByTestId("inner").focus();
     fireEvent.keyDown(getByTestId("inner"), { key: "c" });
     expect(onChar).toHaveBeenCalledWith("c");
+  });
+});
+
+function dispatchInputEvent(
+  el: HTMLElement,
+  type: "beforeinput" | "input",
+  inputType: string,
+  data: string | null,
+) {
+  const event = new InputEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    inputType,
+    data,
+  });
+  el.dispatchEvent(event);
+  return event;
+}
+
+describe("classifyBeforeInput (#59)", () => {
+  it("reads a normal character from insertText data", () => {
+    expect(classifyBeforeInput({ inputType: "insertText", data: "a" })).toEqual({
+      type: "char",
+      char: "a",
+    });
+    expect(classifyBeforeInput({ inputType: "insertReplacementText", data: " " })).toEqual({
+      type: "char",
+      char: " ",
+    });
+  });
+
+  it("maps deleteContentBackward to Backspace", () => {
+    expect(classifyBeforeInput({ inputType: "deleteContentBackward", data: null })).toEqual({
+      type: "backspace",
+    });
+  });
+
+  it("ignores IME composition", () => {
+    expect(
+      classifyBeforeInput({ inputType: "insertCompositionText", data: "a", isComposing: true }),
+    ).toEqual({ type: "ignore" });
+    expect(classifyBeforeInput({ inputType: "insertFromComposition", data: "a" })).toEqual({
+      type: "ignore",
+    });
+    expect(classifyBeforeInput({ inputType: "insertText", data: "a", isComposing: true })).toEqual({
+      type: "ignore",
+    });
+  });
+});
+
+describe("useKeyboard beforeinput (#59)", () => {
+  function Harness({
+    enabled = true,
+    onChar,
+  }: {
+    enabled?: boolean;
+    onChar: (char: string) => void;
+  }) {
+    const inputRef = useRef<HTMLInputElement>(null);
+    useKeyboard({ enabled, onChar, textInput: inputRef });
+    return <input ref={inputRef} data-testid="typing" />;
+  }
+
+  it("takes a normal character from beforeinput and clears the field", () => {
+    const onChar = vi.fn();
+    const { getByTestId } = render(<Harness onChar={onChar} />);
+    const input = getByTestId("typing") as HTMLInputElement;
+    input.value = "a";
+    const event = dispatchInputEvent(input, "beforeinput", "insertText", "a");
+    expect(onChar).toHaveBeenCalledTimes(1);
+    expect(onChar).toHaveBeenCalledWith("a");
+    expect(event.defaultPrevented).toBe(true);
+    expect(input).toHaveValue("");
+  });
+
+  it("maps deleteContentBackward to Backspace without submitting a character", () => {
+    const onChar = vi.fn();
+    const { getByTestId } = render(<Harness onChar={onChar} />);
+    const input = getByTestId("typing") as HTMLInputElement;
+    input.value = "z";
+    const event = dispatchInputEvent(input, "beforeinput", "deleteContentBackward", null);
+    expect(onChar).not.toHaveBeenCalled();
+    expect(event.defaultPrevented).toBe(true);
+    expect(input).toHaveValue("");
+  });
+
+  it("ignores keyCode 229 and uses the following beforeinput as the source of truth", () => {
+    const onChar = vi.fn();
+    const { getByTestId } = render(<Harness onChar={onChar} />);
+    const input = getByTestId("typing") as HTMLInputElement;
+
+    fireEvent.keyDown(input, { key: "Unidentified", keyCode: 229 });
+    expect(onChar).not.toHaveBeenCalled();
+
+    dispatchInputEvent(input, "beforeinput", "insertText", "q");
+    const inputEvent = dispatchInputEvent(input, "input", "insertText", "q");
+    expect(onChar).toHaveBeenCalledTimes(1);
+    expect(onChar).toHaveBeenCalledWith("q");
+    expect(inputEvent.defaultPrevented).toBe(false);
+    expect(input).toHaveValue("");
+  });
+
+  it("does not double-count a physical keydown and its beforeinput / input echo", () => {
+    const onChar = vi.fn();
+    const { getByTestId } = render(<Harness onChar={onChar} />);
+    const input = getByTestId("typing") as HTMLInputElement;
+
+    fireEvent.keyDown(input, { key: "b" });
+    input.value = "b";
+    const before = dispatchInputEvent(input, "beforeinput", "insertText", "b");
+    dispatchInputEvent(input, "input", "insertText", "b");
+
+    expect(onChar).toHaveBeenCalledTimes(1);
+    expect(onChar).toHaveBeenCalledWith("b");
+    expect(before.defaultPrevented).toBe(true);
+    expect(input).toHaveValue("");
+  });
+
+  it("falls back to the input event when beforeinput does not run", () => {
+    const onChar = vi.fn();
+    const { getByTestId } = render(<Harness onChar={onChar} />);
+    const input = getByTestId("typing") as HTMLInputElement;
+    input.value = "k";
+    dispatchInputEvent(input, "input", "insertText", null);
+    expect(onChar).toHaveBeenCalledTimes(1);
+    expect(onChar).toHaveBeenCalledWith("k");
+    expect(input).toHaveValue("");
   });
 });

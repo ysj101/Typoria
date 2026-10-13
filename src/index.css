@@ -129,6 +129,31 @@ input[type="range"] {
   -webkit-touch-callout: none;
 }
 
+/* ソフトキーボード受付用の不可視 input（#59, §14）
+   display:none / visibility:hidden / clip はモバイル Chrome がキーボードを出さない。
+   16px 未満は iOS Chrome がフォーカス時にズームする。 */
+.soft-keyboard-input {
+  position: fixed;
+  inset: 0 auto auto 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  font-size: 16px;
+  line-height: 1;
+  color: transparent;
+  background: transparent;
+  caret-color: transparent;
+  pointer-events: none;
+}
+
+.soft-keyboard-input:focus,
+.soft-keyboard-input:focus-visible {
+  outline: none;
+}
+
 /* キーボード操作のフォーカスリング（§14: 全画面で可視） */
 a:focus-visible,
 button:focus-visible,

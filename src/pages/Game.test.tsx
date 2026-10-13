@@ -246,6 +246,117 @@ describe("Game page (§4.2, AC-01〜AC-05, AC-15)", () => {
     expect(screen.getByTestId("game")).toHaveAttribute("data-state", "PAUSED");
   });
 
+  it("accepts soft-keyboard beforeinput with the same judgment and combo as keydown (#59)", async () => {
+    const clock = createClock();
+    renderGame(clock);
+    await startPlaying(clock);
+    const input = screen.getByTestId("soft-keyboard-input");
+    expect(input).toHaveAttribute("autocapitalize", "off");
+    expect(input).toHaveAttribute("autocorrect", "off");
+    expect(input).toHaveAttribute("autocomplete", "off");
+    expect(input).toHaveAttribute("spellcheck", "false");
+    expect(input).toHaveAttribute("inputmode", "text");
+    expect(input).toHaveAttribute("enterkeyhint", "done");
+    expect(input).toHaveAttribute("aria-label", "解答を入力");
+    expect(input).toHaveFocus();
+
+    const answer = screen
+      .getByTestId("answer")
+      .getAttribute("aria-label")!
+      .replace("入力対象: ", "");
+    const first = answer[0]!;
+    const wrong = first === "z" ? "x" : "z";
+
+    act(() => {
+      input.dispatchEvent(
+        new InputEvent("beforeinput", {
+          bubbles: true,
+          cancelable: true,
+          inputType: "insertText",
+          data: wrong,
+        }),
+      );
+    });
+    expect(screen.getByTestId("answer")).toHaveAttribute("data-last-input", "incorrect");
+    expect(screen.getByTestId("answer").querySelectorAll("[data-state=typed]")).toHaveLength(0);
+
+    fireEvent.keyDown(input, { key: "Unidentified", keyCode: 229 });
+    expect(screen.getByTestId("answer")).toHaveAttribute("data-last-input", "incorrect");
+    expect(screen.getByTestId("answer").querySelectorAll("[data-state=typed]")).toHaveLength(0);
+  });
+
+  it("clears a question from beforeinput with the same combo and score as a physical keyboard", async () => {
+    const clock = createClock();
+    renderGame(clock);
+    await startPlaying(clock);
+    const input = screen.getByTestId("soft-keyboard-input");
+    const answer = screen
+      .getByTestId("answer")
+      .getAttribute("aria-label")!
+      .replace("入力対象: ", "");
+    act(() => {
+      for (const ch of answer) {
+        input.dispatchEvent(
+          new InputEvent("beforeinput", {
+            bubbles: true,
+            cancelable: true,
+            inputType: "insertText",
+            data: ch,
+          }),
+        );
+      }
+    });
+    expect(screen.getByTestId("combo-value")).toHaveTextContent("1");
+    expect(screen.getByTestId("hud-score")).toHaveTextContent("130");
+    expect(input).toHaveValue("");
+  });
+
+  it("treats soft-keyboard deleteContentBackward as Backspace (#59)", async () => {
+    const clock = createClock();
+    renderGame(clock);
+    await startPlaying(clock);
+    const input = screen.getByTestId("soft-keyboard-input");
+    const first = screen
+      .getByTestId("answer")
+      .getAttribute("aria-label")!
+      .replace("入力対象: ", "")[0]!;
+    fireEvent.keyDown(input, { key: first });
+    expect(screen.getByTestId("answer").querySelectorAll("[data-state=typed]")).toHaveLength(1);
+
+    act(() => {
+      input.dispatchEvent(
+        new InputEvent("beforeinput", {
+          bubbles: true,
+          cancelable: true,
+          inputType: "deleteContentBackward",
+          data: null,
+        }),
+      );
+    });
+    expect(screen.getByTestId("answer").querySelectorAll("[data-state=typed]")).toHaveLength(1);
+    expect(screen.getByTestId("answer")).toHaveAttribute("data-last-input", "correct");
+  });
+
+  it("refocuses the soft keyboard from the problem area and the open-keyboard control", async () => {
+    const clock = createClock();
+    renderGame(clock);
+    await startPlaying(clock);
+    const input = screen.getByTestId("soft-keyboard-input");
+    input.blur();
+    expect(input).not.toHaveFocus();
+
+    fireEvent.mouseDown(screen.getByTestId("problem-area"));
+    expect(input).toHaveFocus();
+
+    input.blur();
+    fireEvent.touchStart(screen.getByTestId("problem-area"));
+    expect(input).toHaveFocus();
+
+    input.blur();
+    fireEvent.click(screen.getByTestId("open-keyboard"));
+    expect(input).toHaveFocus();
+  });
+
   it("finishes after 90 seconds, saves the session and navigates to Result (AC-02)", async () => {
     const clock = createClock();
     const { router, database } = renderGame(clock);
@@ -345,7 +456,7 @@ describe("Game effects (#23, §9.1, AC-08, AC-17)", () => {
     const clock = createClock();
     renderGame(clock);
     await startPlaying(clock);
-    const input = screen.getByTestId("typing-capture") as HTMLInputElement;
+    const input = screen.getByTestId("soft-keyboard-input") as HTMLInputElement;
     const first = currentAnswer()[0]!;
     fireEvent.keyDown(input, { key: first });
     input.value = first;

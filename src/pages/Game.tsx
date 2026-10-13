@@ -25,6 +25,14 @@ import type { Difficulty, Question, QuestionStat } from "../types/game";
 /** 画面遷移のアニメーション時間（docs/spec.md §9.1） */
 const RESULT_TRANSITION_MS = 400;
 
+/** ボタンやダイアログ上のタップでは、ソフトキーボード用 input へフォーカスを移さない */
+function isKeyboardChromeTarget(target: EventTarget | null): boolean {
+  return (
+    target instanceof Element &&
+    Boolean(target.closest("button, a, textarea, select, [role='dialog']"))
+  );
+}
+
 export type GameDatabase = SessionDatabase & { getQuestionStats(): Promise<QuestionStat[]> };
 
 export interface GameProps {
@@ -106,22 +114,11 @@ function GameSession({
   const unlockAudio = useCallback(() => {
     void getSharedAudioEngine().unlock();
   }, []);
-  const captureRef = useRef<HTMLInputElement>(null);
-  const lastCaptureAt = useRef(0);
-  const focusCapture = useCallback(
-    (target: EventTarget | null) => {
-      if (engine.getSnapshot().state === "PAUSED") return;
-      const el = target instanceof Element ? target : null;
-      if (el?.closest("button, a, textarea, select, [role='dialog']")) return;
-      if (el?.closest("input") && el !== captureRef.current) return;
-      captureRef.current?.focus({ preventScroll: true });
-    },
-    [engine],
-  );
   // 演出（#23）。ゲーム進行はブロックしない（§18.3）
   const reducedMotion = useReducedMotion();
   const fx = useGameFx(engine, snapshot, { settings, reducedMotion });
   const containerRef = useRef<HTMLElement>(null);
+  const typingInputRef = useRef<HTMLInputElement>(null);
   // 確定処理の中で使う最新の依存を ref に保持し、effect の再実行で遷移が取り消されないようにする
   const depsRef = useRef({ nav, refresh, database });
   useLayoutEffect(() => {
@@ -129,78 +126,49 @@ function GameSession({
   });
   const finishedRef = useRef(false);
 
-  // 開始: マウント時にカウントダウンへ（AC-01）
+  // ソフトキーボードを開く。iOS Chrome はユーザー操作の同期処理でしかキーボードが出ない（#59）
+  const focusTypingInput = useCallback(() => {
+    typingInputRef.current?.focus({ preventScroll: true });
+  }, []);
+
+  // 開始: マウント時にカウントダウンへ（AC-01）。input へフォーカスしてキーボードを出せるようにする
   useEffect(() => {
     engine.start();
-    containerRef.current?.focus();
-  }, [engine]);
+    focusTypingInput();
+  }, [engine, focusTypingInput]);
 
-  // 入力（#14）。同期的にエンジンへ反映する（§18.2）
-  const onChar = useCallback(
-    (ch: string) => {
-      lastCaptureAt.current = performance.now();
-      engine.input(ch);
-    },
-    [engine],
-  );
-  const applyCaptureText = useCallback(
-    (text: string) => {
-      if (!text) return;
-      // keydown 側で既に消費した文字は beforeinput / input で二重に入れない
-      if (performance.now() - lastCaptureAt.current < 40) return;
-      for (const ch of text) {
-        if (ch === "\n" || ch === "\r") continue;
-        onChar(ch);
-      }
-    },
-    [onChar],
-  );
-  const onCaptureBeforeInput = useCallback(
-    (event: React.FormEvent<HTMLInputElement> & { data?: string | null }) => {
-      const data = event.data ?? (event.nativeEvent as InputEvent).data ?? "";
-      if (!data) return;
-      event.preventDefault();
-      applyCaptureText(data);
-      event.currentTarget.value = "";
-    },
-    [applyCaptureText],
-  );
-  const onCaptureInput = useCallback(
-    (event: React.FormEvent<HTMLInputElement>) => {
-      const value = event.currentTarget.value;
-      event.currentTarget.value = "";
-      applyCaptureText(value);
-    },
-    [applyCaptureText],
-  );
-  const onKeyDownCapture = useCallback(
-    (event: React.KeyboardEvent<HTMLElement>) => {
-      unlockAudio();
-      if (event.target !== captureRef.current) return;
-      if (event.ctrlKey || event.metaKey || event.altKey || event.nativeEvent.isComposing) return;
-      if (event.key.length !== 1) return;
-      // キャプチャ input の文字は beforeinput で受ける（iOS Chrome は key が Unidentified になりやすい）
-      event.stopPropagation();
-    },
-    [unlockAudio],
-  );
+  useEffect(() => {
+    if (snapshot.state === "COUNTDOWN" || snapshot.state === "PLAYING") {
+      focusTypingInput();
+      return;
+    }
+    // 一時停止・終了ではキーボードを閉じる。ダイアログ側のフォーカスは奪わない
+    if (document.activeElement === typingInputRef.current) {
+      typingInputRef.current?.blur();
+    }
+  }, [snapshot.state, focusTypingInput]);
+
+  // 入力（#14, #59）。同期的にエンジンへ反映する（§18.2）
+  const onChar = useCallback((ch: string) => engine.input(ch), [engine]);
   const onSkip = useCallback(() => engine.skip(), [engine]);
   const onPause = useCallback(() => {
     const state = engine.getSnapshot().state;
     if (state === "PLAYING") {
       engine.pause();
+      typingInputRef.current?.blur();
     } else if (state === "PAUSED") {
       engine.resume();
-      // ダイアログを閉じたらゲーム領域にフォーカスを戻す（§14 a11y）
-      containerRef.current?.focus();
+      // 再開後は入力欄へ戻し、ソフトキーボードを再び出せるようにする（§14, #59）
+      focusTypingInput();
     }
-  }, [engine]);
+  }, [engine, focusTypingInput]);
   useKeyboard({
     enabled: snapshot.state === "PLAYING" || snapshot.state === "PAUSED",
     onChar,
     onSkip,
     onPause,
     target: containerRef,
+    textInput: typingInputRef,
   });
 
   // タブ非表示で自動一時停止（§3.5）
@@ -251,22 +219,19 @@ function GameSession({
 
   const resumeAndFocus = useCallback(() => {
     engine.resume();
-    containerRef.current?.focus();
-  }, [engine]);
+    focusTypingInput();
+  }, [engine, focusTypingInput]);
 
-  const onPointerDown = useCallback(
-    (event: React.PointerEvent<HTMLElement>) => {
-      unlockAudio();
-      focusCapture(event.target);
+  const keyboardOpen = snapshot.state === "COUNTDOWN" || snapshot.state === "PLAYING";
+
+  // 画面・問題エリアのタップで入力欄へ戻す。preventDefault でフォーカス移動を止め、キーボードを閉じさせない
+  const keepSoftKeyboard = useCallback(
+    (e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>) => {
+      if (!keyboardOpen || isKeyboardChromeTarget(e.target)) return;
+      e.preventDefault();
+      focusTypingInput();
     },
-    [focusCapture, unlockAudio],
-  );
-  const onTouchStart = useCallback(
-    (event: React.TouchEvent<HTMLElement>) => {
-      unlockAudio();
-      focusCapture(event.target);
-    },
-    [focusCapture, unlockAudio],
+    [keyboardOpen, focusTypingInput],
   );
 
   return (
@@ -278,14 +243,30 @@ function GameSession({
       data-testid="game"
       data-state={snapshot.state}
       data-compact={compact ? "true" : "false"}
-      onKeyDownCapture={onKeyDownCapture}
+      onKeyDownCapture={unlockAudio}
       onClickCapture={unlockAudio}
-      onPointerDownCapture={onPointerDown}
-      onTouchStartCapture={onTouchStart}
+      onPointerDownCapture={unlockAudio}
+      onMouseDown={keepSoftKeyboard}
+      onTouchStartCapture={unlockAudio}
+      onTouchStart={keepSoftKeyboard}
       onTouchEndCapture={unlockAudio}
       onContextMenu={(event) => event.preventDefault()}
       data-shake={fx.shakeAttr}
     >
+      <input
+        ref={typingInputRef}
+        type="text"
+        className="soft-keyboard-input"
+        autoCapitalize="off"
+        autoCorrect="off"
+        autoComplete="off"
+        spellCheck={false}
+        inputMode="text"
+        enterKeyHint="done"
+        aria-label="解答を入力"
+        data-testid="soft-keyboard-input"
+        defaultValue=""
+      />
       {settings.particles && <ParticleEffect particles={fx.particles} />}
       <div className="game-screen__column">
         <GameHUD
@@ -296,22 +277,7 @@ function GameSession({
           animate={fx.animate}
         />
 
-        <div className="game-playfield">
-          <input
-            ref={captureRef}
-            data-testid="typing-capture"
-            type="text"
-            tabIndex={-1}
-            autoCapitalize="none"
-            autoCorrect="off"
-            autoComplete="off"
-            spellCheck={false}
-            enterKeyHint="done"
-            aria-label="解答の文字入力"
-            className="game-capture"
-            onBeforeInput={onCaptureBeforeInput}
-            onInput={onCaptureInput}
-          />
+        <div className="game-playfield" data-testid="problem-area">
           {snapshot.state === "COUNTDOWN" && (
             <Countdown remainingMs={snapshot.countdownRemainingMs} />
           )}
@@ -360,6 +326,21 @@ function GameSession({
           >
             一時停止
           </button>
+          {keyboardOpen && (
+            <button
+              type="button"
+              data-testid="open-keyboard"
+              onMouseDown={(e) => e.preventDefault()}
+              onTouchStart={(e) => {
+                e.preventDefault();
+                focusTypingInput();
+              }}
+              onClick={focusTypingInput}
+              className="game-footer__button hover:border-text hover:text-text"
+            >
+              キーボードを開く
+            </button>
+          )}
           <button
             type="button"
             onClick={onSkip}
