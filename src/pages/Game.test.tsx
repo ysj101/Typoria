@@ -15,6 +15,7 @@ import {
   GAME_DURATION_MS,
   type GameSession,
   type Question,
+  type Settings,
 } from "../types/game";
 
 const QUESTIONS: Question[] = [
@@ -78,7 +79,11 @@ function createClock() {
   };
 }
 
-function renderGame(clock: ReturnType<typeof createClock>, database = createFakeDatabase()) {
+function renderGame(
+  clock: ReturnType<typeof createClock>,
+  database = createFakeDatabase(),
+  settings: Partial<Settings> = {},
+) {
   const createGameEngine = ({
     difficulty,
     questions,
@@ -110,7 +115,9 @@ function renderGame(clock: ReturnType<typeof createClock>, database = createFake
     initialEntries: [ROUTES.game],
   });
   render(
-    <AppProvider storage={createMemoryStorage({ settings: { difficultyMode: "easy" } })}>
+    <AppProvider
+      storage={createMemoryStorage({ settings: { difficultyMode: "easy", ...settings } })}
+    >
       <RouterProvider router={testRouter} />
     </AppProvider>,
   );
@@ -263,5 +270,84 @@ describe("Game page (§4.2, AC-01〜AC-05, AC-15)", () => {
     await flushAsync();
     expect(router.state.location.pathname).toBe(ROUTES.result);
     expect((router.state.location.state as { session: GameSession }).session.id).toBe("s-test");
+  });
+});
+
+describe("Game effects (#23, §9.1, AC-08, AC-17)", () => {
+  beforeEach(() => {
+    vi.useFakeTimers({
+      toFake: ["setTimeout", "clearTimeout", "requestAnimationFrame", "cancelAnimationFrame"],
+    });
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  function currentAnswer() {
+    return screen.getByTestId("answer").getAttribute("aria-label")!.replace("入力対象: ", "");
+  }
+
+  function typeCurrentAnswer(game: HTMLElement) {
+    for (const ch of currentAnswer()) fireEvent.keyDown(game, { key: ch });
+  }
+
+  it("switches to FEVER display and background at 10 combo (AC-08)", async () => {
+    const clock = createClock();
+    renderGame(clock);
+    await startPlaying(clock);
+    const game = screen.getByTestId("game");
+    for (let i = 0; i < 9; i += 1) typeCurrentAnswer(game);
+    expect(screen.getByTestId("combo-display")).toHaveAttribute("data-fever", "false");
+    expect(document.querySelector(".typoria-background")).toHaveAttribute("data-mode", "combo");
+    typeCurrentAnswer(game);
+    expect(screen.getByTestId("combo-display")).toHaveAttribute("data-fever", "true");
+    expect(document.querySelector(".typoria-background")).toHaveAttribute("data-mode", "fever");
+    expect(screen.getAllByTestId("score-popup").length).toBeGreaterThan(0);
+  });
+
+  it("shows particles on clear when enabled (AC-17)", async () => {
+    const clock = createClock();
+    renderGame(clock);
+    await startPlaying(clock);
+    typeCurrentAnswer(screen.getByTestId("game"));
+    expect(screen.getAllByTestId("particle").length).toBeGreaterThan(0);
+  });
+
+  it("renders no particles when the setting is off (AC-17)", async () => {
+    const clock = createClock();
+    renderGame(clock, createFakeDatabase(), { particles: false });
+    await startPlaying(clock);
+    typeCurrentAnswer(screen.getByTestId("game"));
+    expect(screen.queryByTestId("particles")).not.toBeInTheDocument();
+    expect(screen.queryAllByTestId("particle")).toHaveLength(0);
+  });
+
+  it("shakes the screen and the character on a miss", async () => {
+    const clock = createClock();
+    renderGame(clock, createFakeDatabase(), { screenShake: "strong" });
+    await startPlaying(clock);
+    const game = screen.getByTestId("game");
+    fireEvent.keyDown(game, { key: "1" });
+    expect(game).toHaveAttribute("data-shake", "strong");
+    expect(screen.getByTestId("answer").querySelector("[data-animate=shake]")).not.toBeNull();
+  });
+
+  it("does not shake when screenShake is none", async () => {
+    const clock = createClock();
+    renderGame(clock, createFakeDatabase(), { screenShake: "none" });
+    await startPlaying(clock);
+    const game = screen.getByTestId("game");
+    fireEvent.keyDown(game, { key: "1" });
+    expect(game).not.toHaveAttribute("data-shake");
+  });
+
+  it("pops the typed character on correct input", async () => {
+    const clock = createClock();
+    renderGame(clock);
+    await startPlaying(clock);
+    const game = screen.getByTestId("game");
+    fireEvent.keyDown(game, { key: currentAnswer()[0]! });
+    const typed = screen.getByTestId("answer").querySelector("[data-state=typed]");
+    expect(typed).toHaveAttribute("data-animate", "pop");
   });
 });

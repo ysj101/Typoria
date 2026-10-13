@@ -1,0 +1,166 @@
+/* ゲーム演出（docs/spec.md §9.1）。transform / opacity のみをアニメーションする */
+
+/* 正しい入力: 文字の拡大・縮小（80ms） */
+[data-animate="pop"] {
+  animation: fx-pop 80ms ease-out;
+  will-change: transform;
+}
+
+/* 誤入力: 文字の揺れ（120ms） */
+[data-animate="shake"] {
+  animation: fx-char-shake 120ms ease-in-out;
+  will-change: transform;
+}
+
+/* 画面揺れ（なし / 弱 / 強） */
+[data-shake="weak"] {
+  animation: fx-screen-shake-weak 120ms ease-in-out;
+}
+[data-shake="strong"] {
+  animation: fx-screen-shake-strong 120ms ease-in-out;
+}
+
+/* 問題クリア: 前の問題のフェードアウト（150ms） */
+.fx-ghost {
+  animation: fx-fade-out 150ms ease-out forwards;
+  will-change: transform, opacity;
+}
+
+/* ScorePopup（300ms） */
+.fx-score-popup[data-animate="rise"] {
+  animation: fx-rise 300ms ease-out forwards;
+  will-change: transform, opacity;
+}
+
+/* ComboDisplay: 数字のスケール変化（150ms）、FEVER 中は拡大・発光 */
+.fx-combo[data-animate="scale"] {
+  animation: fx-combo-scale 150ms ease-out;
+  will-change: transform;
+}
+.fx-combo[data-fever="true"] {
+  transform: scale(1.25);
+  text-shadow:
+    0 0 12px var(--color-fever),
+    0 0 24px var(--color-fever);
+  transition: transform 500ms ease;
+}
+
+/* パーティクル */
+.fx-particle {
+  animation: fx-particle 600ms ease-out forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes fx-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.35);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes fx-char-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-6px);
+  }
+  75% {
+    transform: translateX(6px);
+  }
+}
+
+@keyframes fx-screen-shake-weak {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(-3px, 2px);
+  }
+  75% {
+    transform: translate(3px, -2px);
+  }
+}
+
+@keyframes fx-screen-shake-strong {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(-10px, 6px);
+  }
+  40% {
+    transform: translate(9px, -5px);
+  }
+  60% {
+    transform: translate(-7px, 4px);
+  }
+  80% {
+    transform: translate(6px, -3px);
+  }
+}
+
+@keyframes fx-fade-out {
+  from {
+    opacity: 0.6;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-24px);
+  }
+}
+
+@keyframes fx-rise {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-40px) scale(1.1);
+  }
+}
+
+@keyframes fx-combo-scale {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.4);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes fx-particle {
+  from {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(var(--fx-dx), var(--fx-dy)) scale(0.3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-animate],
+  [data-shake],
+  .fx-ghost,
+  .fx-score-popup,
+  .fx-combo,
+  .fx-particle {
+    animation: none !important;
+    transition: none !important;
+  }
+}

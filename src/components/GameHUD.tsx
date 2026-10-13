@@ -8,10 +8,18 @@ export interface GameHUDProps {
   remainingMs: number;
   combo: number;
   fever: boolean;
+  /** COMBO のアニメーション（reduced-motion で false） */
+  animate?: boolean;
 }
 
 /** HUD: SCORE / TIME / 進捗バー / COMBO（docs/spec.md §4.2） */
-export const GameHUD = memo(function GameHUD({ score, remainingMs, combo, fever }: GameHUDProps) {
+export const GameHUD = memo(function GameHUD({
+  score,
+  remainingMs,
+  combo,
+  fever,
+  animate = true,
+}: GameHUDProps) {
   const ratio = Math.max(0, Math.min(1, remainingMs / GAME_DURATION_MS));
   return (
     <header className="flex w-full flex-col gap-2" aria-label="ゲーム状況">
@@ -22,7 +30,7 @@ export const GameHUD = memo(function GameHUD({ score, remainingMs, combo, fever 
             {score.toLocaleString()}
           </div>
         </div>
-        <ComboDisplay combo={combo} fever={fever} />
+        <ComboDisplay combo={combo} fever={fever} animate={animate} />
         <div className="text-right">
           <div className="text-xs tracking-widest text-subtext">TIME</div>
           <div className="text-3xl font-bold" data-testid="hud-time">
