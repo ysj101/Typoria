@@ -138,7 +138,8 @@ test.describe("keyboard", () => {
     await expect(quit).toBeFocused();
     await page.keyboard.press("Escape");
     await expect(game).toHaveAttribute("data-state", "PLAYING");
-    await expect(game).toBeFocused();
+    // 再開後はゲーム領域内の入力欄へ戻す（ソフトキーボードを再び開けるようにする）
+    await expect(page.getByTestId("soft-keyboard-input")).toBeFocused();
   });
 
   test("Home reaches Game with a single Enter (§4.1)", async ({ page }) => {
