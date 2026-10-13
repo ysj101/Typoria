@@ -1,0 +1,1360 @@
+[
+  {
+    "id": "easy-001",
+    "type": "word",
+    "difficulty": "easy",
+    "japanese": "りんご",
+    "english": "apple",
+    "answer": "apple",
+    "tags": ["noun", "food"]
+  },
+  {
+    "id": "easy-002",
+    "type": "word",
+    "difficulty": "easy",
+    "japanese": "本",
+    "english": "book",
+    "answer": "book",
+    "tags": ["noun"]
+  },
+  {
+    "id": "easy-003",
+    "type": "word",
+    "difficulty": "easy",
+    "japanese": "水",
+    "english": "water",
+    "answer": "water",
+    "tags": ["noun"]
+  },
+  {
+    "id": "easy-004",
+    "type": "word",
+    "difficulty": "easy",
+    "japanese": "学校",
+    "english": "school",
+    "answer": "school",
+    "tags": ["noun"]
+  },
+  {
+    "id": "easy-005",
+    "type": "word",
+    "difficulty": "easy",
+    "japanese": "友達",
+    "english": "friend",
+    "answer": "friend",
+    "tags": ["noun"]
+  },
+  {
+    "id": "easy-006",
+    "type": "word",
+    "difficulty": "easy",
+    "japanese": "幸せな",
+    "english": "happy",
+    "answer": "happy",
+    "tags": ["adjective"]
+  },
+  {
+    "id": "easy-007",
+    "type": "word",
+    "difficulty": "easy",
+    "japanese": "犬",
+    "english": "dog",
+    "answer": "dog",
+    "tags": ["noun", "animal"]
+  },
+  {
+    "id": "easy-008",
+    "type": "word",
+    "difficulty": "easy",
+    "japanese": "家",
+    "english": "house",
+    "answer": "house",
+    "tags": ["noun"]
+  },
+  {
+    "id": "easy-009",
+    "type": "word",
+    "difficulty": "easy",
+    "japanese": "朝",
+    "english": "morning",
+    "answer": "morning",
+    "tags": ["noun", "time"]
+  },
+  {
+    "id": "easy-010",
+    "type": "word",
+    "difficulty": "easy",
+    "japanese": "先生",
+    "english": "teacher",
+    "answer": "teacher",
+    "tags": ["noun", "job"]
+  },
+  {
+    "id": "easy-011",
+    "type": "word",
+    "difficulty": "easy",
+    "japanese": "家族",
+    "english": "family",
+    "answer": "family",
+    "tags": ["noun"]
+  },
+  {
+    "id": "easy-012",
+    "type": "word",
+    "difficulty": "easy",
+    "japanese": "音楽",
+    "english": "music",
+    "answer": "music",
+    "tags": ["noun"]
+  },
+  {
+    "id": "easy-013",
+    "type": "word",
+    "difficulty": "easy",
+    "japanese": "夏",
+    "english": "summer",
+    "answer": "summer",
+    "tags": ["noun", "season"]
+  },
+  {
+    "id": "easy-014",
+    "type": "word",
+    "difficulty": "easy",
+    "japanese": "窓",
+    "english": "window",
+    "answer": "window",
+    "tags": ["noun"]
+  },
+  {
+    "id": "easy-015",
+    "type": "word",
+    "difficulty": "easy",
+    "japanese": "母",
+    "english": "mother",
+    "answer": "mother",
+    "tags": ["noun", "family"]
+  },
+  {
+    "id": "easy-016",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "私は学生です。",
+    "english": "I _____ a student.",
+    "answer": "am",
+    "hint": "be 動詞（I）",
+    "tags": ["be-verb"]
+  },
+  {
+    "id": "easy-017",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "彼女は私の姉です。",
+    "english": "She _____ my sister.",
+    "answer": "is",
+    "hint": "be 動詞（三人称単数）",
+    "tags": ["be-verb"]
+  },
+  {
+    "id": "easy-018",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "彼らは公園にいます。",
+    "english": "They _____ in the park.",
+    "answer": "are",
+    "hint": "be 動詞（複数）",
+    "tags": ["be-verb"]
+  },
+  {
+    "id": "easy-019",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "私は毎日学校へ行きます。",
+    "english": "I _____ to school every day.",
+    "answer": "go",
+    "tags": ["present-simple"]
+  },
+  {
+    "id": "easy-020",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "彼は日曜日にサッカーをします。",
+    "english": "He _____ soccer on Sundays.",
+    "answer": "plays",
+    "tags": ["present-simple", "third-person-s"]
+  },
+  {
+    "id": "easy-021",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "私たちは学校で英語を勉強します。",
+    "english": "We _____ English at school.",
+    "answer": "study",
+    "tags": ["present-simple"]
+  },
+  {
+    "id": "easy-022",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "父は毎朝コーヒーを飲みます。",
+    "english": "My father _____ coffee every morning.",
+    "answer": "drinks",
+    "tags": ["present-simple", "third-person-s"]
+  },
+  {
+    "id": "easy-023",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "私は猫と犬を飼っています。",
+    "english": "I _____ a cat and a dog.",
+    "answer": "have",
+    "tags": ["present-simple"]
+  },
+  {
+    "id": "easy-024",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "彼女には兄弟が二人います。",
+    "english": "She _____ two brothers.",
+    "answer": "has",
+    "tags": ["present-simple", "third-person-s"]
+  },
+  {
+    "id": "easy-025",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "私はにんじんが好きではありません。",
+    "english": "I _____ not like carrots.",
+    "answer": "do",
+    "tags": ["negative"]
+  },
+  {
+    "id": "easy-026",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "彼は朝食を食べません。",
+    "english": "He _____ not eat breakfast.",
+    "answer": "does",
+    "tags": ["negative", "third-person-s"]
+  },
+  {
+    "id": "easy-027",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "何時ですか。",
+    "english": "What _____ is it?",
+    "answer": "time",
+    "tags": ["question"]
+  },
+  {
+    "id": "easy-028",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "あなたの名前は何ですか。",
+    "english": "_____ is your name?",
+    "answer": "What",
+    "tags": ["wh-question"]
+  },
+  {
+    "id": "easy-029",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "あなたはどこの出身ですか。",
+    "english": "_____ are you from?",
+    "answer": "Where",
+    "tags": ["wh-question"]
+  },
+  {
+    "id": "easy-030",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "あなたは何歳ですか。",
+    "english": "_____ old are you?",
+    "answer": "How",
+    "tags": ["wh-question"]
+  },
+  {
+    "id": "easy-031",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "これは私の本です。",
+    "english": "This is _____ book.",
+    "answer": "my",
+    "tags": ["possessive"]
+  },
+  {
+    "id": "easy-032",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "あれは彼の車です。",
+    "english": "That is _____ car.",
+    "answer": "his",
+    "tags": ["possessive"]
+  },
+  {
+    "id": "easy-033",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "私を手伝ってください。",
+    "english": "Please help _____.",
+    "answer": "me",
+    "tags": ["pronoun"]
+  },
+  {
+    "id": "easy-034",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "猫はテーブルの上にいます。",
+    "english": "The cat is _____ the table.",
+    "answer": "on",
+    "tags": ["preposition"]
+  },
+  {
+    "id": "easy-035",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "私は東京に住んでいます。",
+    "english": "I live _____ Tokyo.",
+    "answer": "in",
+    "tags": ["preposition"]
+  },
+  {
+    "id": "easy-036",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "私たちはバスで学校へ行きます。",
+    "english": "We go to school _____ bus.",
+    "answer": "by",
+    "tags": ["preposition"]
+  },
+  {
+    "id": "easy-037",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "ドアを開けてください。",
+    "english": "Please _____ the door.",
+    "answer": "open",
+    "tags": ["imperative"]
+  },
+  {
+    "id": "easy-038",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "座ってください。",
+    "english": "_____ down, please.",
+    "answer": "Sit",
+    "tags": ["imperative"]
+  },
+  {
+    "id": "easy-039",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "一緒に昼食を食べましょう。",
+    "english": "Let's _____ lunch together.",
+    "answer": "eat",
+    "tags": ["suggestion"]
+  },
+  {
+    "id": "easy-040",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "私は速く走ることができます。",
+    "english": "I can _____ fast.",
+    "answer": "run",
+    "tags": ["can"]
+  },
+  {
+    "id": "easy-041",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "彼女はとても上手に歌えます。",
+    "english": "She can _____ very well.",
+    "answer": "sing",
+    "tags": ["can"]
+  },
+  {
+    "id": "easy-042",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "私は毎日 7 時に起きます。",
+    "english": "I _____ up at seven every day.",
+    "answer": "get",
+    "tags": ["present-simple", "phrasal-verb"]
+  },
+  {
+    "id": "easy-043",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "彼は夕食後にテレビを見ます。",
+    "english": "He _____ TV after dinner.",
+    "answer": "watches",
+    "tags": ["present-simple", "third-person-s"]
+  },
+  {
+    "id": "easy-044",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "兄は毎晩音楽を聴きます。",
+    "english": "My brother _____ to music every night.",
+    "answer": "listens",
+    "tags": ["present-simple", "third-person-s"]
+  },
+  {
+    "id": "easy-045",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "私は英語がとても好きです。",
+    "english": "I _____ English very much.",
+    "answer": "like",
+    "tags": ["present-simple"]
+  },
+  {
+    "id": "easy-046",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "今日は晴れです。",
+    "english": "It is _____ today.",
+    "answer": "sunny",
+    "tags": ["adjective", "weather"]
+  },
+  {
+    "id": "easy-047",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "その花はとても美しいです。",
+    "english": "The flower is very _____.",
+    "answer": "beautiful",
+    "tags": ["adjective"]
+  },
+  {
+    "id": "easy-048",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "私は犬を二匹飼っています。",
+    "english": "I have _____ dogs.",
+    "answer": "two",
+    "tags": ["number"]
+  },
+  {
+    "id": "easy-049",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "ありがとう、スミスさん。",
+    "english": "_____ you, Mr. Smith.",
+    "answer": "Thank",
+    "tags": ["greeting"]
+  },
+  {
+    "id": "easy-050",
+    "type": "fill_blank",
+    "difficulty": "easy",
+    "japanese": "はじめまして。",
+    "english": "Nice to _____ you.",
+    "answer": "meet",
+    "tags": ["greeting"]
+  },
+  {
+    "id": "normal-001",
+    "type": "word",
+    "difficulty": "normal",
+    "japanese": "昨日",
+    "english": "yesterday",
+    "answer": "yesterday",
+    "tags": ["adverb", "time"]
+  },
+  {
+    "id": "normal-002",
+    "type": "word",
+    "difficulty": "normal",
+    "japanese": "明日",
+    "english": "tomorrow",
+    "answer": "tomorrow",
+    "tags": ["adverb", "time"]
+  },
+  {
+    "id": "normal-003",
+    "type": "word",
+    "difficulty": "normal",
+    "japanese": "天気",
+    "english": "weather",
+    "answer": "weather",
+    "tags": ["noun"]
+  },
+  {
+    "id": "normal-004",
+    "type": "word",
+    "difficulty": "normal",
+    "japanese": "重要な",
+    "english": "important",
+    "answer": "important",
+    "tags": ["adjective"]
+  },
+  {
+    "id": "normal-005",
+    "type": "word",
+    "difficulty": "normal",
+    "japanese": "週末",
+    "english": "weekend",
+    "answer": "weekend",
+    "tags": ["noun", "time"]
+  },
+  {
+    "id": "normal-006",
+    "type": "word",
+    "difficulty": "normal",
+    "japanese": "なぜなら",
+    "english": "because",
+    "answer": "because",
+    "tags": ["conjunction"]
+  },
+  {
+    "id": "normal-007",
+    "type": "word",
+    "difficulty": "normal",
+    "japanese": "一緒に",
+    "english": "together",
+    "answer": "together",
+    "tags": ["adverb"]
+  },
+  {
+    "id": "normal-008",
+    "type": "word",
+    "difficulty": "normal",
+    "japanese": "異なる",
+    "english": "different",
+    "answer": "different",
+    "tags": ["adjective"]
+  },
+  {
+    "id": "normal-009",
+    "type": "word",
+    "difficulty": "normal",
+    "japanese": "覚えている",
+    "english": "remember",
+    "answer": "remember",
+    "tags": ["verb"]
+  },
+  {
+    "id": "normal-010",
+    "type": "word",
+    "difficulty": "normal",
+    "japanese": "言語",
+    "english": "language",
+    "answer": "language",
+    "tags": ["noun"]
+  },
+  {
+    "id": "normal-011",
+    "type": "word",
+    "difficulty": "normal",
+    "japanese": "〜の間に",
+    "english": "between",
+    "answer": "between",
+    "tags": ["preposition"]
+  },
+  {
+    "id": "normal-012",
+    "type": "word",
+    "difficulty": "normal",
+    "japanese": "有名な",
+    "english": "famous",
+    "answer": "famous",
+    "tags": ["adjective"]
+  },
+  {
+    "id": "normal-013",
+    "type": "word",
+    "difficulty": "normal",
+    "japanese": "十分な",
+    "english": "enough",
+    "answer": "enough",
+    "tags": ["adjective"]
+  },
+  {
+    "id": "normal-014",
+    "type": "word",
+    "difficulty": "normal",
+    "japanese": "たいてい",
+    "english": "usually",
+    "answer": "usually",
+    "tags": ["adverb", "frequency"]
+  },
+  {
+    "id": "normal-015",
+    "type": "word",
+    "difficulty": "normal",
+    "japanese": "休暇",
+    "english": "vacation",
+    "answer": "vacation",
+    "tags": ["noun"]
+  },
+  {
+    "id": "normal-016",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "私は去年京都へ行きました。",
+    "english": "I _____ to Kyoto last year.",
+    "answer": "went",
+    "hint": "go の過去形",
+    "tags": ["past-simple", "irregular-verb"]
+  },
+  {
+    "id": "normal-017",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "彼女は昨日手紙を書きました。",
+    "english": "She _____ a letter yesterday.",
+    "answer": "wrote",
+    "hint": "write の過去形",
+    "tags": ["past-simple", "irregular-verb"]
+  },
+  {
+    "id": "normal-018",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "私たちは昨日放課後にサッカーをしました。",
+    "english": "We _____ soccer after school yesterday.",
+    "answer": "played",
+    "tags": ["past-simple"]
+  },
+  {
+    "id": "normal-019",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "彼は昨夜パーティーに来ませんでした。",
+    "english": "He _____ not come to the party last night.",
+    "answer": "did",
+    "tags": ["past-simple", "negative"]
+  },
+  {
+    "id": "normal-020",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "私は今本を読んでいます。",
+    "english": "I _____ reading a book now.",
+    "answer": "am",
+    "tags": ["present-progressive"]
+  },
+  {
+    "id": "normal-021",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "彼らは公園でテニスをしています。",
+    "english": "They _____ playing tennis in the park.",
+    "answer": "are",
+    "tags": ["present-progressive"]
+  },
+  {
+    "id": "normal-022",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "私が電話したとき、彼女は夕食を作っていました。",
+    "english": "She _____ cooking dinner when I called.",
+    "answer": "was",
+    "tags": ["past-progressive"]
+  },
+  {
+    "id": "normal-023",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "私たちはそのときテレビを見ていました。",
+    "english": "We _____ watching TV at that time.",
+    "answer": "were",
+    "tags": ["past-progressive"]
+  },
+  {
+    "id": "normal-024",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "私は明日祖母を訪ねるつもりです。",
+    "english": "I _____ visit my grandmother tomorrow.",
+    "answer": "will",
+    "tags": ["future"]
+  },
+  {
+    "id": "normal-025",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "今日の午後は雨が降りそうです。",
+    "english": "It is _____ to rain this afternoon.",
+    "answer": "going",
+    "tags": ["future", "be-going-to"]
+  },
+  {
+    "id": "normal-026",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "あなたはもっと一生懸命勉強すべきです。",
+    "english": "You _____ study harder.",
+    "answer": "should",
+    "tags": ["modal"]
+  },
+  {
+    "id": "normal-027",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "私たちは学校で制服を着なければなりません。",
+    "english": "We _____ wear uniforms at school.",
+    "answer": "must",
+    "tags": ["modal"]
+  },
+  {
+    "id": "normal-028",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "あなたの電話を使ってもいいですか。",
+    "english": "_____ I use your phone?",
+    "answer": "May",
+    "tags": ["modal", "question"]
+  },
+  {
+    "id": "normal-029",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "彼は三か国語を話せます。",
+    "english": "He _____ speak three languages.",
+    "answer": "can",
+    "tags": ["modal"]
+  },
+  {
+    "id": "normal-030",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "このかばんはあれより大きいです。",
+    "english": "This bag is _____ than that one.",
+    "answer": "bigger",
+    "tags": ["comparative"]
+  },
+  {
+    "id": "normal-031",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "トムはクラスで一番背が高い生徒です。",
+    "english": "Tom is the _____ student in the class.",
+    "answer": "tallest",
+    "tags": ["superlative"]
+  },
+  {
+    "id": "normal-032",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "数学は英語より難しいです。",
+    "english": "Math is _____ difficult than English.",
+    "answer": "more",
+    "tags": ["comparative"]
+  },
+  {
+    "id": "normal-033",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "彼女は兄と同じくらい速く走ります。",
+    "english": "She runs as _____ as her brother.",
+    "answer": "fast",
+    "tags": ["comparison", "as-as"]
+  },
+  {
+    "id": "normal-034",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "私はもう宿題を終えました。",
+    "english": "I have _____ finished my homework.",
+    "answer": "already",
+    "tags": ["present-perfect"]
+  },
+  {
+    "id": "normal-035",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "私は一度もハワイに行ったことがありません。",
+    "english": "I have _____ been to Hawaii.",
+    "answer": "never",
+    "tags": ["present-perfect", "experience"]
+  },
+  {
+    "id": "normal-036",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "あなたは今までに寿司を食べたことがありますか。",
+    "english": "_____ you ever eaten sushi?",
+    "answer": "Have",
+    "tags": ["present-perfect", "question"]
+  },
+  {
+    "id": "normal-037",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "彼は東京に 10 年間住んでいます。",
+    "english": "He has _____ in Tokyo for ten years.",
+    "answer": "lived",
+    "tags": ["present-perfect", "continuation"]
+  },
+  {
+    "id": "normal-038",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "電車はちょうど出発したところです。",
+    "english": "The train has just _____.",
+    "answer": "left",
+    "hint": "leave の過去分詞",
+    "tags": ["present-perfect", "completion"]
+  },
+  {
+    "id": "normal-039",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "私は音楽を聴くのが好きです。",
+    "english": "I enjoy _____ to music.",
+    "answer": "listening",
+    "tags": ["gerund"]
+  },
+  {
+    "id": "normal-040",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "私は医者になりたいです。",
+    "english": "I want _____ be a doctor.",
+    "answer": "to",
+    "tags": ["infinitive"]
+  },
+  {
+    "id": "normal-041",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "私は新しい車を買うことに決めました。",
+    "english": "I decided _____ a new car.",
+    "answer": "to buy",
+    "tags": ["infinitive"]
+  },
+  {
+    "id": "normal-042",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "私はその知らせを聞いて嬉しかったです。",
+    "english": "I was happy _____ the news.",
+    "answer": "to hear",
+    "tags": ["infinitive", "adverbial"]
+  },
+  {
+    "id": "normal-043",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "私は今日部屋を掃除しなければなりません。",
+    "english": "I have to _____ my room today.",
+    "answer": "clean",
+    "tags": ["have-to"]
+  },
+  {
+    "id": "normal-044",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "彼女は早く寝なければなりません。",
+    "english": "She _____ to go to bed early.",
+    "answer": "has",
+    "tags": ["have-to", "third-person-s"]
+  },
+  {
+    "id": "normal-045",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "あなたは昨日どこへ行きましたか。",
+    "english": "_____ did you go yesterday?",
+    "answer": "Where",
+    "tags": ["wh-question", "past-simple"]
+  },
+  {
+    "id": "normal-046",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "あなたはどのくらい英語を勉強していますか。",
+    "english": "_____ long have you studied English?",
+    "answer": "How",
+    "tags": ["wh-question", "present-perfect"]
+  },
+  {
+    "id": "normal-047",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "私は彼が正しいと思います。",
+    "english": "I think _____ he is right.",
+    "answer": "that",
+    "tags": ["conjunction", "that-clause"]
+  },
+  {
+    "id": "normal-048",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "私は疲れていたので、早く寝ました。",
+    "english": "I was tired, _____ I went to bed early.",
+    "answer": "so",
+    "tags": ["conjunction"]
+  },
+  {
+    "id": "normal-049",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "何か飲み物をください。",
+    "english": "Give me _____ to drink.",
+    "answer": "something",
+    "tags": ["pronoun", "infinitive"]
+  },
+  {
+    "id": "normal-050",
+    "type": "fill_blank",
+    "difficulty": "normal",
+    "japanese": "彼に電話しましたが、彼は出ませんでした。",
+    "english": "I called him, _____ he didn't answer.",
+    "answer": "but",
+    "tags": ["conjunction"]
+  },
+  {
+    "id": "hard-001",
+    "type": "word",
+    "difficulty": "hard",
+    "japanese": "〜だけれども",
+    "english": "although",
+    "answer": "although",
+    "tags": ["conjunction"]
+  },
+  {
+    "id": "hard-002",
+    "type": "word",
+    "difficulty": "hard",
+    "japanese": "環境",
+    "english": "environment",
+    "answer": "environment",
+    "tags": ["noun"]
+  },
+  {
+    "id": "hard-003",
+    "type": "word",
+    "difficulty": "hard",
+    "japanese": "機会",
+    "english": "opportunity",
+    "answer": "opportunity",
+    "tags": ["noun"]
+  },
+  {
+    "id": "hard-004",
+    "type": "word",
+    "difficulty": "hard",
+    "japanese": "直ちに",
+    "english": "immediately",
+    "answer": "immediately",
+    "tags": ["adverb"]
+  },
+  {
+    "id": "hard-005",
+    "type": "word",
+    "difficulty": "hard",
+    "japanese": "責任のある",
+    "english": "responsible",
+    "answer": "responsible",
+    "tags": ["adjective"]
+  },
+  {
+    "id": "hard-006",
+    "type": "word",
+    "difficulty": "hard",
+    "japanese": "経験",
+    "english": "experience",
+    "answer": "experience",
+    "tags": ["noun"]
+  },
+  {
+    "id": "hard-007",
+    "type": "word",
+    "difficulty": "hard",
+    "japanese": "知識",
+    "english": "knowledge",
+    "answer": "knowledge",
+    "tags": ["noun"]
+  },
+  {
+    "id": "hard-008",
+    "type": "word",
+    "difficulty": "hard",
+    "japanese": "必要な",
+    "english": "necessary",
+    "answer": "necessary",
+    "tags": ["adjective"]
+  },
+  {
+    "id": "hard-009",
+    "type": "word",
+    "difficulty": "hard",
+    "japanese": "特に",
+    "english": "particularly",
+    "answer": "particularly",
+    "tags": ["adverb"]
+  },
+  {
+    "id": "hard-010",
+    "type": "word",
+    "difficulty": "hard",
+    "japanese": "結果",
+    "english": "consequence",
+    "answer": "consequence",
+    "tags": ["noun"]
+  },
+  {
+    "id": "hard-011",
+    "type": "word",
+    "difficulty": "hard",
+    "japanese": "雰囲気",
+    "english": "atmosphere",
+    "answer": "atmosphere",
+    "tags": ["noun"]
+  },
+  {
+    "id": "hard-012",
+    "type": "word",
+    "difficulty": "hard",
+    "japanese": "それにもかかわらず",
+    "english": "nevertheless",
+    "answer": "nevertheless",
+    "tags": ["adverb", "conjunction"]
+  },
+  {
+    "id": "hard-013",
+    "type": "word",
+    "difficulty": "hard",
+    "japanese": "重要な、著しい",
+    "english": "significant",
+    "answer": "significant",
+    "tags": ["adjective"]
+  },
+  {
+    "id": "hard-014",
+    "type": "word",
+    "difficulty": "hard",
+    "japanese": "達成",
+    "english": "achievement",
+    "answer": "achievement",
+    "tags": ["noun"]
+  },
+  {
+    "id": "hard-015",
+    "type": "word",
+    "difficulty": "hard",
+    "japanese": "状況",
+    "english": "circumstance",
+    "answer": "circumstance",
+    "tags": ["noun"]
+  },
+  {
+    "id": "hard-016",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "もし私が金持ちなら、世界中を旅行するのに。",
+    "english": "If I _____ rich, I would travel around the world.",
+    "answer": "were",
+    "hint": "仮定法過去",
+    "tags": ["subjunctive", "second-conditional"]
+  },
+  {
+    "id": "hard-017",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "もっと一生懸命勉強していたら、試験に合格していただろうに。",
+    "english": "If I had studied harder, I _____ have passed the exam.",
+    "answer": "would",
+    "hint": "仮定法過去完了",
+    "tags": ["subjunctive", "third-conditional"]
+  },
+  {
+    "id": "hard-018",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "フランス語を流暢に話せたらいいのに。",
+    "english": "I wish I _____ speak French fluently.",
+    "answer": "could",
+    "tags": ["subjunctive", "wish"]
+  },
+  {
+    "id": "hard-019",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "彼女はまるで何でも知っているかのように話します。",
+    "english": "She talks as if she _____ everything.",
+    "answer": "knew",
+    "tags": ["subjunctive", "as-if"]
+  },
+  {
+    "id": "hard-020",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "もう寝る時間ですよ。",
+    "english": "It is time you _____ to bed.",
+    "answer": "went",
+    "tags": ["subjunctive", "it-is-time"]
+  },
+  {
+    "id": "hard-021",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "もう出発する時間です。",
+    "english": "It's high time we _____.",
+    "answer": "left",
+    "tags": ["subjunctive", "it-is-time"]
+  },
+  {
+    "id": "hard-022",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "あそこに立っている男性は私のおじです。",
+    "english": "The man _____ is standing over there is my uncle.",
+    "answer": "who",
+    "tags": ["relative-pronoun"]
+  },
+  {
+    "id": "hard-023",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "ここが私の生まれた家です。",
+    "english": "This is the house _____ I was born.",
+    "answer": "where",
+    "tags": ["relative-adverb"]
+  },
+  {
+    "id": "hard-024",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "表紙が赤い本は私のものです。",
+    "english": "The book _____ cover is red is mine.",
+    "answer": "whose",
+    "tags": ["relative-pronoun", "possessive"]
+  },
+  {
+    "id": "hard-025",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "私は私たちが初めて会った日を覚えています。",
+    "english": "I remember the day _____ we first met.",
+    "answer": "when",
+    "tags": ["relative-adverb"]
+  },
+  {
+    "id": "hard-026",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "これが私が遅れた理由です。",
+    "english": "This is the reason _____ I was late.",
+    "answer": "why",
+    "tags": ["relative-adverb"]
+  },
+  {
+    "id": "hard-027",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "祖父によって書かれた手紙が屋根裏で見つかりました。",
+    "english": "The letter _____ by my grandfather was found in the attic.",
+    "answer": "written",
+    "tags": ["past-participle", "postmodifier"]
+  },
+  {
+    "id": "hard-028",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "ピアノを弾いている少女は私のいとこです。",
+    "english": "The girl _____ the piano is my cousin.",
+    "answer": "playing",
+    "tags": ["present-participle", "postmodifier"]
+  },
+  {
+    "id": "hard-029",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "お金がなかったので、私はチケットを買えませんでした。",
+    "english": "_____ no money, I could not buy the ticket.",
+    "answer": "Having",
+    "tags": ["participle-construction"]
+  },
+  {
+    "id": "hard-030",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "遠くから見ると、その岩はライオンのように見えます。",
+    "english": "_____ from a distance, the rock looks like a lion.",
+    "answer": "Seen",
+    "tags": ["participle-construction", "past-participle"]
+  },
+  {
+    "id": "hard-031",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "その橋は 1890 年に建てられました。",
+    "english": "The bridge _____ built in 1890.",
+    "answer": "was",
+    "tags": ["passive", "past-simple"]
+  },
+  {
+    "id": "hard-032",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "英語は多くの国で話されています。",
+    "english": "English _____ spoken in many countries.",
+    "answer": "is",
+    "tags": ["passive", "present-simple"]
+  },
+  {
+    "id": "hard-033",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "その家は今修理されているところです。",
+    "english": "The house is _____ repaired now.",
+    "answer": "being",
+    "tags": ["passive", "progressive"]
+  },
+  {
+    "id": "hard-034",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "その報告書は金曜日までに提出されなければなりません。",
+    "english": "The report must _____ submitted by Friday.",
+    "answer": "be",
+    "tags": ["passive", "modal"]
+  },
+  {
+    "id": "hard-035",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "こんなに美しい夕日を見たことは一度もありません。",
+    "english": "Never _____ I seen such a beautiful sunset.",
+    "answer": "have",
+    "tags": ["inversion", "present-perfect"]
+  },
+  {
+    "id": "hard-036",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "私が到着するとすぐに電話が鳴りました。",
+    "english": "_____ had I arrived when the phone rang.",
+    "answer": "Hardly",
+    "tags": ["inversion", "past-perfect"]
+  },
+  {
+    "id": "hard-037",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "彼は歌うだけでなく、踊りもします。",
+    "english": "Not only _____ he sing, but he also dances.",
+    "answer": "does",
+    "tags": ["inversion", "not-only"]
+  },
+  {
+    "id": "hard-038",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "そのとき初めて彼女は自分の間違いに気づきました。",
+    "english": "Only then _____ she realize her mistake.",
+    "answer": "did",
+    "tags": ["inversion", "only-then"]
+  },
+  {
+    "id": "hard-039",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "その知らせは私を泣かせました。",
+    "english": "The news _____ me cry.",
+    "answer": "made",
+    "tags": ["causative"]
+  },
+  {
+    "id": "hard-040",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "私は昨日髪を切ってもらいました。",
+    "english": "I had my hair _____ yesterday.",
+    "answer": "cut",
+    "tags": ["causative", "have-object-done"]
+  },
+  {
+    "id": "hard-041",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "あなたの考えを教えてください。",
+    "english": "Let me _____ what you think.",
+    "answer": "know",
+    "tags": ["causative", "let"]
+  },
+  {
+    "id": "hard-042",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "真夜中になってようやく彼は帰宅しました。",
+    "english": "It was not until midnight _____ he came home.",
+    "answer": "that",
+    "tags": ["cleft-sentence", "not-until"]
+  },
+  {
+    "id": "hard-043",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "どんなに頑張っても、過去は変えられません。",
+    "english": "No matter _____ hard you try, you cannot change the past.",
+    "answer": "how",
+    "tags": ["concession", "no-matter"]
+  },
+  {
+    "id": "hard-044",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "どんなに疲れていても、彼は働き続けました。",
+    "english": "_____ tired he was, he kept working.",
+    "answer": "However",
+    "tags": ["concession"]
+  },
+  {
+    "id": "hard-045",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "練習すればするほど、上手になります。",
+    "english": "The more you practice, the _____ you get.",
+    "answer": "better",
+    "tags": ["comparative", "the-more-the-more"]
+  },
+  {
+    "id": "hard-046",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "彼は父親よりずっと背が高いです。",
+    "english": "He is _____ taller than his father.",
+    "answer": "much",
+    "tags": ["comparative", "emphasis"]
+  },
+  {
+    "id": "hard-047",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "彼女には話し相手になる友達がいません。",
+    "english": "She has no friends to talk _____.",
+    "answer": "with",
+    "tags": ["infinitive", "preposition"]
+  },
+  {
+    "id": "hard-048",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "万一明日雨が降れば、試合は中止されます。",
+    "english": "_____ it rain tomorrow, the game will be canceled.",
+    "answer": "Should",
+    "tags": ["subjunctive", "inversion"]
+  },
+  {
+    "id": "hard-049",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "彼はまるで幽霊を見たかのように振る舞いました。",
+    "english": "He acted _____ he had seen a ghost.",
+    "answer": "as if",
+    "tags": ["subjunctive", "as-if"]
+  },
+  {
+    "id": "hard-050",
+    "type": "fill_blank",
+    "difficulty": "hard",
+    "japanese": "健康が大切なのは言うまでもありません。",
+    "english": "It goes without _____ that health is important.",
+    "answer": "saying",
+    "tags": ["gerund", "idiom"]
+  }
+]
