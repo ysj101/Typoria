@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("works offline after the first load (AC-20)", async ({ page, context }) => {
+test("AC-20 オフラインでもプレイできる（初回読み込み後）", async ({ page, context }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Typoria" })).toBeVisible();
 
