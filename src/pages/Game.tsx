@@ -7,7 +7,9 @@ import { QUESTIONS } from "../data/questions";
 import { resolveDifficulty } from "../game/difficulty";
 import { selectWeakQuestions } from "../game/questions";
 import { applySessionResult, type SessionDatabase } from "../game/session";
+import { getSharedAudioEngine } from "../hooks/useAudio";
 import { useGame, type UseGameOptions } from "../hooks/useGame";
+import { useGameAudio } from "../hooks/useGameAudio";
 import { useKeyboard } from "../hooks/useKeyboard";
 import { db } from "../storage";
 import type { Difficulty, Question, QuestionStat } from "../types/game";
@@ -79,13 +81,19 @@ function GameSession({
   createGameEngine,
 }: GameSessionProps) {
   const nav = useAppNavigate();
-  const { refresh } = useAppContext();
+  const { refresh, settings } = useAppContext();
   const { engine, snapshot } = useGame({
     difficulty,
     questions,
     weakQuestionIds,
     createGameEngine,
   });
+  // 効果音・BGM の結線（#24）
+  useGameAudio(engine, settings);
+  // 直接 /game を開いた場合の保険: 最初の操作で AudioContext を unlock する（自動再生制限対応）
+  const unlockAudio = useCallback(() => {
+    void getSharedAudioEngine().unlock();
+  }, []);
   const containerRef = useRef<HTMLElement>(null);
   // 確定処理の中で使う最新の依存を ref に保持し、effect の再実行で遷移が取り消されないようにする
   const depsRef = useRef({ nav, refresh, database });
@@ -167,6 +175,8 @@ function GameSession({
       className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-10 px-4 py-6 outline-none"
       data-testid="game"
       data-state={snapshot.state}
+      onKeyDownCapture={unlockAudio}
+      onClickCapture={unlockAudio}
     >
       <GameHUD
         score={snapshot.score}
