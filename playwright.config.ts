@@ -12,14 +12,14 @@ export default defineConfig({
     baseURL: `http://localhost:${port}`,
     trace: "on-first-retry",
   },
-  // 既定（npm run test:e2e / CI）は chromium のみ。webkit（Safari 相当）は npm run test:e2e:all で実行する。
+  // 既定（pnpm test:e2e / CI）は chromium のみ。webkit（Safari 相当）は pnpm test:e2e:all で実行する。
   // Edge は Chromium ベースのため chromium の結果で代替する（docs/verification.md）。
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
     { name: "webkit", use: { ...devices["Desktop Safari"] } },
   ],
   webServer: {
-    command: `npm run build && npm run preview -- --port ${port} --strictPort`,
+    command: `pnpm build && pnpm preview --port ${port} --strictPort`,
     url: `http://localhost:${port}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

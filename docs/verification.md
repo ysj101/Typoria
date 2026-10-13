@@ -6,11 +6,11 @@ docs/spec.md §14 非機能要件、§15 Phase 4 の確認記録。計測日: 20
 
 | 対象   | 方法                                                                              |
 | ------ | --------------------------------------------------------------------------------- |
-| Chrome | Playwright `chromium` プロジェクト（`npm run test:e2e`。CI でも実行）             |
-| Safari | Playwright `webkit` プロジェクト（`npm run test:e2e:all`。ローカルで実行）        |
+| Chrome | Playwright `chromium` プロジェクト（`pnpm test:e2e`。CI でも実行）                |
+| Safari | Playwright `webkit` プロジェクト（`pnpm test:e2e:all`。ローカルで実行）           |
 | Edge   | Chromium ベース（レンダリング・V8・Web Audio が共通）のため chromium の結果で代替 |
 
-`npm run test:e2e:all` で chromium + webkit の両方を実行できる。CI は実行時間を抑えるため chromium のみ。
+`pnpm test:e2e:all` で chromium + webkit の両方を実行できる。CI は実行時間を抑えるため chromium のみ。
 
 ## 受け入れ基準の確認表
 
@@ -87,4 +87,4 @@ docs/spec.md §14 非機能要件、§15 Phase 4 の確認記録。計測日: 20
 
 - 実機 Safari（macOS / iOS）での効果音・BGM の発音（AudioContext の unlock）と日本語 IME 変換中の入力（AC-14 / AC-16 は合成イベントで自動確認済み）。
 - 実機 Edge での動作（Chromium ベースのため問題は想定していない）。
-- CI は chromium のみ。webkit は `npm run test:e2e:all` をローカルで実行する。
+- CI は chromium のみ。webkit は `pnpm test:e2e:all` をローカルで実行する。
