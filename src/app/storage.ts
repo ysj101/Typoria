@@ -1,6 +1,7 @@
 import {
   DEFAULT_PROGRESS,
   DEFAULT_SETTINGS,
+  type DailyMissionProgress,
   type Settings,
   type UserProgress,
 } from "../types/game";
@@ -14,6 +15,8 @@ export interface AppStorage {
   putSettings(settings: Settings): Promise<void>;
   getProgress(): Promise<UserProgress>;
   putProgress(progress: UserProgress): Promise<void>;
+  /** 当日のデイリーミッション進捗（§8.2）。未実装・未保存なら undefined */
+  getMission?(dateKey: string): Promise<DailyMissionProgress | undefined>;
 }
 
 /** テストやストレージ未接続時に使うメモリ実装 */
@@ -31,5 +34,6 @@ export function createMemoryStorage(
     putProgress: async (next) => {
       progress = next;
     },
+    getMission: async () => undefined,
   };
 }
