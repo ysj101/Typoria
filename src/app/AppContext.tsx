@@ -1,4 +1,5 @@
-import { createContext, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { AppContext } from "./context";
 import type { ReactNode } from "react";
 import {
   DEFAULT_PROGRESS,
@@ -22,8 +23,6 @@ export interface AppContextValue {
   refresh(): Promise<void>;
   storage: AppStorage;
 }
-
-export const AppContext = createContext<AppContextValue | null>(null);
 
 export interface AppProviderProps {
   storage?: AppStorage;
