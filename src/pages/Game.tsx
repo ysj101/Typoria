@@ -23,6 +23,14 @@ import type { Difficulty, Question, QuestionStat } from "../types/game";
 /** 画面遷移のアニメーション時間（docs/spec.md §9.1） */
 const RESULT_TRANSITION_MS = 400;
 
+/** ボタンやダイアログ上のタップでは、ソフトキーボード用 input へフォーカスを移さない */
+function isKeyboardChromeTarget(target: EventTarget | null): boolean {
+  return (
+    target instanceof Element &&
+    Boolean(target.closest("button, a, textarea, select, [role='dialog']"))
+  );
+}
+
 export type GameDatabase = SessionDatabase & { getQuestionStats(): Promise<QuestionStat[]> };
 
 export interface GameProps {
@@ -104,6 +112,7 @@ function GameSession({
   const reducedMotion = useReducedMotion();
   const fx = useGameFx(engine, snapshot, { settings, reducedMotion });
   const containerRef = useRef<HTMLElement>(null);
+  const typingInputRef = useRef<HTMLInputElement>(null);
   // 確定処理の中で使う最新の依存を ref に保持し、effect の再実行で遷移が取り消されないようにする
   const depsRef = useRef({ nav, refresh, database });
   useLayoutEffect(() => {
@@ -111,31 +120,49 @@ function GameSession({
   });
   const finishedRef = useRef(false);
 
-  // 開始: マウント時にカウントダウンへ（AC-01）
+  // ソフトキーボードを開く。iOS Chrome はユーザー操作の同期処理でしかキーボードが出ない（#59）
+  const focusTypingInput = useCallback(() => {
+    typingInputRef.current?.focus({ preventScroll: true });
+  }, []);
+
+  // 開始: マウント時にカウントダウンへ（AC-01）。input へフォーカスしてキーボードを出せるようにする
   useEffect(() => {
     engine.start();
-    containerRef.current?.focus();
-  }, [engine]);
+    focusTypingInput();
+  }, [engine, focusTypingInput]);
 
-  // 入力（#14）。同期的にエンジンへ反映する（§18.2）
+  useEffect(() => {
+    if (snapshot.state === "COUNTDOWN" || snapshot.state === "PLAYING") {
+      focusTypingInput();
+      return;
+    }
+    // 一時停止・終了ではキーボードを閉じる。ダイアログ側のフォーカスは奪わない
+    if (document.activeElement === typingInputRef.current) {
+      typingInputRef.current?.blur();
+    }
+  }, [snapshot.state, focusTypingInput]);
+
+  // 入力（#14, #59）。同期的にエンジンへ反映する（§18.2）
   const onChar = useCallback((ch: string) => engine.input(ch), [engine]);
   const onSkip = useCallback(() => engine.skip(), [engine]);
   const onPause = useCallback(() => {
     const state = engine.getSnapshot().state;
     if (state === "PLAYING") {
       engine.pause();
+      typingInputRef.current?.blur();
     } else if (state === "PAUSED") {
       engine.resume();
-      // ダイアログを閉じたらゲーム領域にフォーカスを戻す（§14 a11y）
-      containerRef.current?.focus();
+      // 再開後は入力欄へ戻し、ソフトキーボードを再び出せるようにする（§14, #59）
+      focusTypingInput();
     }
-  }, [engine]);
+  }, [engine, focusTypingInput]);
   useKeyboard({
     enabled: snapshot.state === "PLAYING" || snapshot.state === "PAUSED",
     onChar,
     onSkip,
     onPause,
     target: containerRef,
+    textInput: typingInputRef,
   });
 
   // タブ非表示で自動一時停止（§3.5）
@@ -186,8 +213,20 @@ function GameSession({
 
   const resumeAndFocus = useCallback(() => {
     engine.resume();
-    containerRef.current?.focus();
-  }, [engine]);
+    focusTypingInput();
+  }, [engine, focusTypingInput]);
+
+  const keyboardOpen = snapshot.state === "COUNTDOWN" || snapshot.state === "PLAYING";
+
+  // 画面・問題エリアのタップで入力欄へ戻す。preventDefault でフォーカス移動を止め、キーボードを閉じさせない
+  const keepSoftKeyboard = useCallback(
+    (e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>) => {
+      if (!keyboardOpen || isKeyboardChromeTarget(e.target)) return;
+      e.preventDefault();
+      focusTypingInput();
+    },
+    [keyboardOpen, focusTypingInput],
+  );
 
   return (
     <section
@@ -199,8 +238,24 @@ function GameSession({
       data-state={snapshot.state}
       onKeyDownCapture={unlockAudio}
       onClickCapture={unlockAudio}
+      onMouseDown={keepSoftKeyboard}
+      onTouchStart={keepSoftKeyboard}
       data-shake={fx.shakeAttr}
     >
+      <input
+        ref={typingInputRef}
+        type="text"
+        className="soft-keyboard-input"
+        autoCapitalize="off"
+        autoCorrect="off"
+        autoComplete="off"
+        spellCheck={false}
+        inputMode="text"
+        enterKeyHint="done"
+        aria-label="解答を入力"
+        data-testid="soft-keyboard-input"
+        defaultValue=""
+      />
       {settings.particles && <ParticleEffect particles={fx.particles} />}
       <GameHUD
         score={snapshot.score}
@@ -210,7 +265,10 @@ function GameSession({
         animate={fx.animate}
       />
 
-      <div className="relative flex flex-1 flex-col items-center justify-center">
+      <div
+        className="relative flex flex-1 flex-col items-center justify-center"
+        data-testid="problem-area"
+      >
         {snapshot.state === "COUNTDOWN" && (
           <Countdown remainingMs={snapshot.countdownRemainingMs} />
         )}
@@ -252,14 +310,31 @@ function GameSession({
 
       <footer className="flex flex-wrap items-center justify-between gap-2 text-sm text-subtext">
         <span>Esc: 一時停止</span>
-        <button
-          type="button"
-          onClick={onSkip}
-          disabled={snapshot.state !== "PLAYING"}
-          className="rounded-full border border-subtext px-4 py-1.5 hover:border-text hover:text-text disabled:opacity-60"
-        >
-          スキップ（Ctrl + Enter）
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {keyboardOpen && (
+            <button
+              type="button"
+              data-testid="open-keyboard"
+              onMouseDown={(e) => e.preventDefault()}
+              onTouchStart={(e) => {
+                e.preventDefault();
+                focusTypingInput();
+              }}
+              onClick={focusTypingInput}
+              className="rounded-full border border-subtext px-4 py-1.5 hover:border-text hover:text-text"
+            >
+              キーボードを開く
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onSkip}
+            disabled={snapshot.state !== "PLAYING"}
+            className="rounded-full border border-subtext px-4 py-1.5 hover:border-text hover:text-text disabled:opacity-60"
+          >
+            スキップ（Ctrl + Enter）
+          </button>
+        </div>
       </footer>
 
       {snapshot.state === "PAUSED" && (
