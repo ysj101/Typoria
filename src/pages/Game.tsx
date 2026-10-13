@@ -1,8 +1,255 @@
-/** ゲーム画面（docs/spec.md §4.2）。本体は #22 で実装 */
-export function Game() {
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useAppNavigate } from "../app/navigation";
+import { useAppContext } from "../app/useAppContext";
+import { GameHUD } from "../components/GameHUD";
+import { TypingInput } from "../components/TypingInput";
+import { QUESTIONS } from "../data/questions";
+import { resolveDifficulty } from "../game/difficulty";
+import { selectWeakQuestions } from "../game/questions";
+import { applySessionResult, type SessionDatabase } from "../game/session";
+import { useGame, type UseGameOptions } from "../hooks/useGame";
+import { useKeyboard } from "../hooks/useKeyboard";
+import { db } from "../storage";
+import type { Difficulty, Question, QuestionStat } from "../types/game";
+
+/** 画面遷移のアニメーション時間（docs/spec.md §9.1） */
+const RESULT_TRANSITION_MS = 400;
+
+export type GameDatabase = SessionDatabase & { getQuestionStats(): Promise<QuestionStat[]> };
+
+export interface GameProps {
+  database?: GameDatabase;
+  questions?: Question[];
+  createGameEngine?: UseGameOptions["createGameEngine"];
+}
+
+/** ゲーム画面（docs/spec.md §4.2, §3, §13.2, AC-01〜AC-05, AC-15） */
+export function Game({ database = db, questions = QUESTIONS, createGameEngine }: GameProps) {
+  const { settings, progress } = useAppContext();
+  const [weakIds, setWeakIds] = useState<string[] | null>(null);
+  const difficulty = resolveDifficulty(settings.difficultyMode, progress);
+
+  // 苦手問題（§7.3）を読み込んでからエンジンを生成する
+  useEffect(() => {
+    let cancelled = false;
+    void database
+      .getQuestionStats()
+      .then((stats) => {
+        if (!cancelled) setWeakIds(selectWeakQuestions(stats));
+      })
+      .catch(() => {
+        if (!cancelled) setWeakIds([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [database]);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8">
-      <h1 className="text-3xl font-bold">Game</h1>
-    </main>
+    <div className="min-h-screen" aria-busy={weakIds === null}>
+      <h1 className="sr-only">Game</h1>
+      {weakIds === null ? (
+        <p className="flex min-h-screen items-center justify-center text-subtext">Loading...</p>
+      ) : (
+        <GameSession
+          difficulty={difficulty}
+          questions={questions}
+          weakQuestionIds={weakIds}
+          database={database}
+          createGameEngine={createGameEngine}
+        />
+      )}
+    </div>
+  );
+}
+
+interface GameSessionProps {
+  difficulty: Difficulty;
+  questions: Question[];
+  weakQuestionIds: string[];
+  database: GameDatabase;
+  createGameEngine?: UseGameOptions["createGameEngine"];
+}
+
+function GameSession({
+  difficulty,
+  questions,
+  weakQuestionIds,
+  database,
+  createGameEngine,
+}: GameSessionProps) {
+  const nav = useAppNavigate();
+  const { refresh } = useAppContext();
+  const { engine, snapshot } = useGame({
+    difficulty,
+    questions,
+    weakQuestionIds,
+    createGameEngine,
+  });
+  const containerRef = useRef<HTMLElement>(null);
+  // 確定処理の中で使う最新の依存を ref に保持し、effect の再実行で遷移が取り消されないようにする
+  const depsRef = useRef({ nav, refresh, database });
+  useLayoutEffect(() => {
+    depsRef.current = { nav, refresh, database };
+  });
+  const finishedRef = useRef(false);
+
+  // 開始: マウント時にカウントダウンへ（AC-01）
+  useEffect(() => {
+    engine.start();
+    containerRef.current?.focus();
+  }, [engine]);
+
+  // 入力（#14）。同期的にエンジンへ反映する（§18.2）
+  const onChar = useCallback((ch: string) => engine.input(ch), [engine]);
+  const onSkip = useCallback(() => engine.skip(), [engine]);
+  const onPause = useCallback(() => {
+    const state = engine.getSnapshot().state;
+    if (state === "PLAYING") engine.pause();
+    else if (state === "PAUSED") engine.resume();
+  }, [engine]);
+  useKeyboard({
+    enabled: snapshot.state === "PLAYING" || snapshot.state === "PAUSED",
+    onChar,
+    onSkip,
+    onPause,
+    target: containerRef,
+  });
+
+  // タブ非表示で自動一時停止（§3.5）
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden" && engine.getSnapshot().state === "PLAYING") {
+        engine.pause();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [engine]);
+
+  // FINISHED → セッション確定（#17）→ Result へ遷移（§9.1: 400ms）
+  useEffect(() => {
+    if (snapshot.state !== "FINISHED" || finishedRef.current) return;
+    finishedRef.current = true;
+    const session = engine.getSession();
+    if (!session) return;
+    void (async () => {
+      const { nav, refresh, database } = depsRef.current;
+      const result = await applySessionResult(session, { db: database });
+      await refresh();
+      engine.toResult();
+      if (session.completedAt === null) {
+        nav.toHome();
+        return;
+      }
+      setTimeout(() => {
+        depsRef.current.nav.toResult({
+          session: result.session,
+          isNewRecord: result.isNewRecord,
+          missionRewards: result.missionRewards,
+          nextDifficulty: result.nextDifficulty,
+          streak: result.streak,
+        });
+      }, RESULT_TRANSITION_MS);
+    })();
+  }, [snapshot.state, engine]);
+
+  const resumeAndFocus = useCallback(() => {
+    engine.resume();
+    containerRef.current?.focus();
+  }, [engine]);
+
+  return (
+    <section
+      ref={containerRef}
+      tabIndex={-1}
+      aria-label="ゲーム"
+      className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-10 px-4 py-6 outline-none"
+      data-testid="game"
+      data-state={snapshot.state}
+    >
+      <GameHUD
+        score={snapshot.score}
+        remainingMs={snapshot.remainingMs}
+        combo={snapshot.combo}
+        fever={snapshot.fever}
+      />
+
+      <div className="flex flex-1 flex-col items-center justify-center">
+        {snapshot.state === "COUNTDOWN" && (
+          <Countdown remainingMs={snapshot.countdownRemainingMs} />
+        )}
+        {snapshot.question && snapshot.typing && snapshot.state !== "COUNTDOWN" && (
+          <TypingInput question={snapshot.question} typing={snapshot.typing} />
+        )}
+        {snapshot.state === "FINISHED" && (
+          <p className="mt-8 text-2xl font-bold text-perfect" role="status">
+            TIME UP!
+          </p>
+        )}
+      </div>
+
+      <footer className="flex items-center justify-between text-sm text-subtext">
+        <span>Esc: 一時停止</span>
+        <button
+          type="button"
+          onClick={onSkip}
+          disabled={snapshot.state !== "PLAYING"}
+          className="rounded-full border border-subtext/40 px-4 py-1.5 hover:border-text hover:text-text disabled:opacity-40"
+        >
+          スキップ（Ctrl + Enter）
+        </button>
+      </footer>
+
+      {snapshot.state === "PAUSED" && (
+        <PauseOverlay onResume={resumeAndFocus} onQuit={() => engine.abort()} />
+      )}
+    </section>
+  );
+}
+
+function Countdown({ remainingMs }: { remainingMs: number }) {
+  const n = Math.max(1, Math.ceil(remainingMs / 1000));
+  return (
+    <div
+      className="text-8xl font-bold tabular-nums text-perfect"
+      role="timer"
+      aria-live="assertive"
+      data-testid="countdown"
+    >
+      {n}
+    </div>
+  );
+}
+
+function PauseOverlay({ onResume, onQuit }: { onResume: () => void; onQuit: () => void }) {
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="一時停止"
+      className="fixed inset-0 z-10 flex flex-col items-center justify-center gap-6 bg-bg/80 backdrop-blur-sm"
+      data-testid="pause-overlay"
+    >
+      <p className="text-4xl font-bold tracking-widest">PAUSED</p>
+      <p className="text-subtext">Esc で再開</p>
+      <div className="flex gap-4">
+        <button
+          type="button"
+          onClick={onResume}
+          autoFocus
+          className="rounded-full bg-perfect px-8 py-3 font-bold text-bg focus-visible:ring-4 focus-visible:ring-fever"
+        >
+          再開
+        </button>
+        <button
+          type="button"
+          onClick={onQuit}
+          className="rounded-full border border-subtext px-8 py-3 text-subtext hover:text-text"
+        >
+          やめる
+        </button>
+      </div>
+    </div>
   );
 }
