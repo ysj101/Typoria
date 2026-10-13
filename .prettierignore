@@ -6,6 +6,6 @@ test-results
 test-results-*
 playwright-report-*
 playwright-report
-package-lock.json
+pnpm-lock.yaml
 public/sounds
 .claude
