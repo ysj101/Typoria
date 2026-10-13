@@ -1,6 +1,7 @@
 # Typoria
 
 [![CI](https://github.com/ysj101/Typoria/actions/workflows/ci.yml/badge.svg)](https://github.com/ysj101/Typoria/actions/workflows/ci.yml)
+[![Deploy](https://github.com/ysj101/Typoria/actions/workflows/deploy.yml/badge.svg)](https://github.com/ysj101/Typoria/actions/workflows/deploy.yml)
 
 タイピングで英語を学ぶ 90 秒のブラウザゲーム。
 
@@ -36,13 +37,30 @@ PWA（Service Worker）により、初回読み込み後はオフラインでも
 
 ## GitHub Pages
 
-GitHub Pages は `https://ysj101.github.io/Typoria/` のようにリポジトリ名のサブパスで配信します。ビルド時の環境変数 `VITE_BASE_PATH` で Vite の `base` を切り替えます（未指定は `/`）。PWA manifest の `start_url` / `scope` と Service Worker の `navigateFallback` も同じパスになります。画面遷移は hash ルーターなので、サブパス用の 404 フォールバックは不要です。
+公開 URL は [https://ysj101.github.io/Typoria/](https://ysj101.github.io/Typoria/) です。リポジトリ名のサブパスで配信します。ビルド時の環境変数 `VITE_BASE_PATH` で Vite の `base` を切り替えます（未指定は `/`）。PWA manifest の `start_url` / `scope` と Service Worker の `navigateFallback` も同じパスになります。画面遷移は hash ルーターなので、サブパス用の 404 フォールバックは不要です。
 
 ```bash
 VITE_BASE_PATH=/Typoria/ pnpm build
 VITE_BASE_PATH=/Typoria/ pnpm preview
 ```
 
-プレビューは `http://localhost:4173/Typoria/` で開けます。`pnpm dev`、`pnpm build`、`pnpm test`、`pnpm test:e2e` は `VITE_BASE_PATH` 未設定のため `/` で動きます。
+プレビューは `http://localhost:4173/Typoria/` で開けます。ローカルの `pnpm dev`、`pnpm build`、`pnpm test`、`pnpm test:e2e` は `VITE_BASE_PATH` 未設定のため `/` で動きます。CI の build ジョブは `VITE_BASE_PATH=/Typoria/` でビルドし、PR の時点でサブパス向けビルドが壊れていないか確認します。
+
+### デプロイ
+
+初回のみ、Pages のソースを GitHub Actions にし、Website に公開 URL を設定します。
+
+```bash
+gh api -X POST repos/ysj101/Typoria/pages -f build_type=workflow
+gh repo edit ysj101/Typoria --homepage https://ysj101.github.io/Typoria/
+```
+
+`main` への push、または Actions からの手動実行（`workflow_dispatch`）で `.github/workflows/deploy.yml` が動きます。
+
+1. `pnpm install --frozen-lockfile` で依存関係を入れる
+2. `VITE_BASE_PATH=/Typoria/ pnpm build` で `dist` を作る
+3. `dist` を GitHub Pages へデプロイする
+
+進行中のデプロイはキャンセルしません。Service Worker は `registerType: "autoUpdate"` なので、公開後にページを開くと新しい Worker が有効になり、古い precache は置き換わります。
 
 ブラウザ横断・性能の確認記録は `docs/verification.md` を参照してください（`pnpm test:e2e e2e/perf.spec.ts` で計測）。
