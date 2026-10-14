@@ -28,9 +28,10 @@ export default defineConfig({
       // manifest の icons は globPatterns で拾うため、自動追加による precache の重複を避ける
       includeManifestIcons: false,
       manifest: {
-        name: "Typoria",
+        name: "Typoria — IT基礎用語",
         short_name: "Typoria",
-        description: "タイピングで英語を学ぶ 90 秒のゲーム",
+        description:
+          "新人エンジニア向け。1 回 3 分で IT の基礎用語を読んで、打って、クイズで覚える。",
         lang: "ja",
         start_url: base,
         scope: base,

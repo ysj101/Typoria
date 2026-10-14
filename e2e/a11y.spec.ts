@@ -99,6 +99,21 @@ test.describe("accessibility (axe)", () => {
   });
 });
 
+test.describe("home fits one screen at 360px", () => {
+  test.use({ viewport: { width: 360, height: 640 } });
+
+  test("no horizontal scroll and the home stays within the viewport", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByRole("button", { name: "PLAY" })).toBeVisible();
+    await expect(page.getByRole("list", { name: "学習の流れ" })).toBeVisible();
+    await expectNoHorizontalScroll(page);
+    const overflowY = await page.evaluate(
+      () => document.documentElement.scrollHeight - document.documentElement.clientHeight,
+    );
+    expect(overflowY).toBeLessThanOrEqual(0);
+  });
+});
+
 test.describe("mobile width (375px) has no horizontal scroll", () => {
   test.use({ viewport: { width: 375, height: 667 } });
 

@@ -27,6 +27,16 @@ describe("Home (§4.1)", () => {
   it("renders without any saved progress", async () => {
     renderHome();
     expect(await screen.findByRole("heading", { name: "Typoria" })).toBeInTheDocument();
+    expect(screen.getByText("新人エンジニア向け")).toBeInTheDocument();
+    expect(
+      screen.getByText("1 回 3 分。IT の基礎用語を読んで、打って、覚える。"),
+    ).toBeInTheDocument();
+    const steps = screen.getByRole("list", { name: "学習の流れ" });
+    expect(steps).toHaveTextContent("読む");
+    expect(steps).toHaveTextContent("打つ");
+    expect(steps).toHaveTextContent("クイズ");
+    expect(screen.queryByText(/英語を学ぶ/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/90 秒/)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "PLAY" })).toBeInTheDocument();
     expect(screen.getByTestId("home-xp")).toHaveTextContent("0 XP");
     expect(screen.getByTestId("home-difficulty")).toHaveTextContent("Easy");
