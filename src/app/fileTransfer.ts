@@ -4,6 +4,17 @@
  * iOS Chrome はユーザー操作の呼び出しスタックを離れたあとの programmatic download を無視するため、
  * 準備済みファイルをタップで保存する経路を別に持つ。
  */
+import type { ExportData } from "../types/game";
+
+/** 学習データ（用語の学習記録 `termProgress` を含む）を JSON にする */
+export function serializeLearningData(data: ExportData): string {
+  return JSON.stringify(data, null, 2);
+}
+
+/** エクスポートした学習データを保存用のファイルにする */
+export function createLearningDataFile(data: ExportData, fileName: string): File {
+  return new File([serializeLearningData(data)], fileName, { type: "application/json" });
+}
 
 /** iPhone / iPad の Chrome（CriOS）および iPadOS のデスクトップ UA */
 export function needsExplicitFileSave(): boolean {

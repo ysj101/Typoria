@@ -4,6 +4,7 @@ import { Link } from "react-router";
 import { ROUTES } from "../app/navigation";
 import { useAppContext } from "../app/useAppContext";
 import {
+  createLearningDataFile,
   needsExplicitFileSave,
   shareOrDownloadFile,
   triggerFileDownload,
@@ -80,9 +81,7 @@ export function Settings({ database = db }: SettingsProps) {
     try {
       const data = await database.exportData();
       const fileName = exportFileName(new Date());
-      const file = new File([JSON.stringify(data, null, 2)], fileName, {
-        type: "application/json",
-      });
+      const file = createLearningDataFile(data, fileName);
       // Android / desktop Chrome は download 属性で保存できる（AC-19）
       triggerFileDownload(file, fileName);
       // iOS Chrome は上の click を無視することがあるので、次のタップで保存する
@@ -276,7 +275,8 @@ export function Settings({ database = db }: SettingsProps) {
             >
               <p>{CONFIRM_MESSAGE}</p>
               <p className="text-sm text-subtext">
-                セッション {importState.data.sessions.length} 件、累計 XP{" "}
+                セッション {importState.data.sessions.length} 件、用語の学習記録{" "}
+                {importState.data.termProgress.length} 件、累計 XP{" "}
                 {importState.data.progress.totalXP}（{importState.data.exportedAt} にエクスポート）
               </p>
               <div className="flex flex-wrap gap-3">

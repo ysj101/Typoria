@@ -16,6 +16,7 @@ function validExport(): ExportData {
     sessions: [],
     questionStats: [],
     settings: DEFAULT_SETTINGS,
+    termProgress: [],
   };
 }
 

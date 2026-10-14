@@ -1,7 +1,9 @@
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { AppProvider } from "../app/AppContext";
+import { createMemoryStorage } from "../app/storage";
 import { LEARN_RESUME_STORAGE_KEY } from "../game/learnResume";
 import { Result } from "./Result";
 import { Learn } from "./Learn";
@@ -41,7 +43,11 @@ function renderLearn(
     ],
     { initialEntries: ["/learn"] },
   );
-  render(<RouterProvider router={router} />);
+  render(
+    <AppProvider storage={createMemoryStorage()}>
+      <RouterProvider router={router} />
+    </AppProvider>,
+  );
   return router;
 }
 
@@ -208,6 +214,64 @@ describe("Learn page", () => {
     });
     expect(screen.getByTestId("learn-result-quiz")).toHaveAttribute("data-correct", "false");
     expect(screen.getByTestId("learn-result-quiz")).toHaveTextContent("不正解");
+  });
+
+  it("saves read terms at round end and the quiz result after answering", async () => {
+    const storage = createMemoryStorage();
+    const router = createMemoryRouter(
+      [
+        { path: "/", element: <h1>Typoria</h1> },
+        {
+          path: "/learn",
+          element: <Learn terms={TERMS} rng={() => 0} now={QUIZ_NOW} />,
+        },
+        { path: "/result", element: <Result /> },
+      ],
+      { initialEntries: ["/learn"] },
+    );
+    render(
+      <AppProvider storage={storage}>
+        <RouterProvider router={router} />
+      </AppProvider>,
+    );
+    await finishRound();
+    await waitFor(async () => {
+      expect(await storage.listTermProgress()).toEqual([
+        {
+          termId: "ai-001",
+          seenCount: 1,
+          quizCorrect: 0,
+          quizIncorrect: 0,
+          lastStudiedAt: "2026-10-14T09:00:00.000Z",
+        },
+        {
+          termId: "cloud-001",
+          seenCount: 1,
+          quizCorrect: 0,
+          quizIncorrect: 0,
+          lastStudiedAt: "2026-10-14T09:00:00.000Z",
+        },
+        {
+          termId: "web-001",
+          seenCount: 1,
+          quizCorrect: 0,
+          quizIncorrect: 0,
+          lastStudiedAt: "2026-10-14T09:00:00.000Z",
+        },
+      ]);
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: "理解度クイズへ" }));
+    await userEvent.click(screen.getAllByTestId("learn-quiz-choice")[3]!);
+    await waitFor(async () => {
+      const saved = await storage.listTermProgress();
+      expect(saved.find((row) => row.termId === "ai-001")).toMatchObject({
+        seenCount: 1,
+        quizCorrect: 1,
+        quizIncorrect: 0,
+        lastStudiedAt: "2026-10-14T09:00:00.000Z",
+      });
+    });
   });
 
   it("returns home from the quit button during reading", async () => {

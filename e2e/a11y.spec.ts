@@ -82,6 +82,18 @@ test.describe("accessibility (axe)", () => {
     await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
     await expectNoSeriousViolations(page, "Settings");
   });
+
+  test("Learn categories", async ({ page }) => {
+    await page.goto("/#/learn");
+    await expect(page.getByRole("heading", { name: "IT基礎用語" })).toBeVisible();
+    await expectNoSeriousViolations(page, "Learn categories");
+  });
+
+  test("Glossary", async ({ page }) => {
+    await page.goto("/#/glossary");
+    await expect(page.getByRole("heading", { name: "用語帳" })).toBeVisible();
+    await expectNoSeriousViolations(page, "Glossary");
+  });
 });
 
 test.describe("home fits one screen at 360px", () => {
@@ -99,7 +111,7 @@ test.describe("home fits one screen at 360px", () => {
 test.describe("mobile width (375px) has no horizontal scroll", () => {
   test.use({ viewport: { width: 375, height: 667 } });
 
-  for (const path of ["/", "/#/history", "/#/settings"]) {
+  for (const path of ["/", "/#/learn", "/#/glossary", "/#/history", "/#/settings"]) {
     test(path, async ({ page }) => {
       await page.goto(path);
       await expect(page.getByRole("heading").first()).toBeVisible();

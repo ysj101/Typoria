@@ -1,4 +1,5 @@
 import "fake-indexeddb/auto";
+import { openDB } from "idb";
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_PROGRESS,
@@ -10,6 +11,7 @@ import {
   type QuestionStat,
   type UserProgress,
 } from "../types/game";
+import type { TermProgress } from "../types/term";
 import { ImportError, openDatabase, validateExportData } from "./database";
 
 let counter = 0;
@@ -40,6 +42,14 @@ const stat = (questionId: string): QuestionStat => ({
   incorrectKeystrokes: 3,
   lastAttemptedAt: "2026-10-13T00:00:00.000Z",
 });
+
+const termProgress: TermProgress = {
+  termId: "ai-001",
+  seenCount: 2,
+  quizCorrect: 1,
+  quizIncorrect: 1,
+  lastStudiedAt: "2026-10-14T09:00:00.000Z",
+};
 
 const progress: UserProgress = {
   totalXP: 120,
@@ -120,6 +130,7 @@ describe("export / import (§12.4, AC-19)", () => {
     await db.putProgress(progress);
     await db.putSettings({ ...DEFAULT_SETTINGS, bgmEnabled: false });
     await db.bulkPutQuestionStats([stat("easy-001")]);
+    await db.putTermProgress([termProgress]);
     return db;
   }
 
@@ -132,6 +143,7 @@ describe("export / import (§12.4, AC-19)", () => {
     expect(data.sessions).toHaveLength(1);
     expect(data.questionStats).toHaveLength(1);
     expect(data.settings.bgmEnabled).toBe(false);
+    expect(data.termProgress).toEqual([termProgress]);
     db.close();
   });
 
@@ -146,6 +158,7 @@ describe("export / import (§12.4, AC-19)", () => {
       sessions: exported.sessions,
       questionStats: exported.questionStats,
       settings: exported.settings,
+      termProgress: exported.termProgress,
     });
     expect((await target.listSessions()).map((s) => s.id)).toEqual(["a"]);
     source.close();
@@ -156,6 +169,7 @@ describe("export / import (§12.4, AC-19)", () => {
     ["wrong version", (d: ExportData) => ({ ...d, version: 99 })],
     ["missing progress", (d: ExportData) => ({ ...d, progress: undefined })],
     ["sessions not array", (d: ExportData) => ({ ...d, sessions: "nope" })],
+    ["termProgress not an array", (d: ExportData) => ({ ...d, termProgress: "nope" })],
     ["not an object", () => "garbage"],
   ])("rejects %s and keeps existing data", async (_name, mutate) => {
     const db = await seeded();
@@ -165,6 +179,31 @@ describe("export / import (§12.4, AC-19)", () => {
     await expect(db.importData(bad)).rejects.toBeInstanceOf(ImportError);
     expect(await db.getProgress()).toEqual(progress);
     expect(await db.listSessions()).toHaveLength(1);
+    expect(await db.listTermProgress()).toEqual([termProgress]);
+    db.close();
+  });
+
+  it("imports a legacy envelope with no termProgress as an empty learning record", async () => {
+    const db = await seeded();
+    const exported = await db.exportData();
+    const legacy = { ...exported };
+    delete (legacy as { termProgress?: TermProgress[] }).termProgress;
+    await db.importData(legacy);
+    expect(await db.listTermProgress()).toEqual([]);
+    expect(await db.getProgress()).toEqual(progress);
+    db.close();
+  });
+
+  it("rejects a termProgress row with a fractional count and keeps stored rows", async () => {
+    const db = await seeded();
+    const exported = await db.exportData();
+    const bad = {
+      ...exported,
+      termProgress: [{ ...termProgress, seenCount: 1.5 }],
+    };
+    expect(validateExportData(bad).ok).toBe(false);
+    await expect(db.importData(bad)).rejects.toBeInstanceOf(ImportError);
+    expect(await db.listTermProgress()).toEqual([termProgress]);
     db.close();
   });
 
@@ -173,6 +212,36 @@ describe("export / import (§12.4, AC-19)", () => {
     const result = validateExportData(await db.exportData());
     expect(result.ok).toBe(true);
     db.close();
+  });
+});
+
+describe("migration from v1", () => {
+  it("adds termProgress and keeps sessions, progress, and settings", async () => {
+    const name = `typoria-migrate-${Date.now()}-${counter++}`;
+    const v1 = await openDB(name, 1, {
+      upgrade(db) {
+        const sessions = db.createObjectStore("sessions", { keyPath: "id" });
+        sessions.createIndex("startedAt", "startedAt");
+        db.createObjectStore("progress");
+        db.createObjectStore("settings");
+        db.createObjectStore("questionStats", { keyPath: "questionId" });
+        db.createObjectStore("dailyMissions", { keyPath: "dateKey" });
+      },
+    });
+    await v1.put("sessions", session("keep", "2026-10-11T10:00:00.000Z"));
+    await v1.put("progress", progress, "progress");
+    await v1.put("settings", { ...DEFAULT_SETTINGS, sfxVolume: 12 }, "settings");
+    v1.close();
+
+    const migrated = openDatabase(name);
+    expect((await migrated.listSessions()).map((item) => item.id)).toEqual(["keep"]);
+    expect(await migrated.getProgress()).toEqual(progress);
+    expect((await migrated.getSettings()).sfxVolume).toBe(12);
+    expect(await migrated.listTermProgress()).toEqual([]);
+    await migrated.putTermProgress([termProgress]);
+    expect(await migrated.listTermProgress()).toEqual([termProgress]);
+    expect((await migrated.listSessions()).map((item) => item.id)).toEqual(["keep"]);
+    migrated.close();
   });
 });
 

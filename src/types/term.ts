@@ -71,3 +71,43 @@ export interface Term {
 export function isTermCategory(value: unknown): value is TermCategory {
   return typeof value === "string" && (TERM_CATEGORIES as readonly string[]).includes(value);
 }
+
+/**
+ * 用語ごとの学習記録。
+ * 未学習はレコードが無い（または回数ゼロ）。学習中は読んだがクイズ未正解。習得はクイズに 1 回以上正解。
+ */
+export interface TermProgress {
+  termId: string;
+  seenCount: number;
+  quizCorrect: number;
+  quizIncorrect: number;
+  /** ISO 8601 */
+  lastStudiedAt: string;
+}
+
+/** 用語の学習状態 */
+export type TermStudyStatus = "unseen" | "learning" | "mastered";
+
+export const TERM_STUDY_STATUS_LABELS: Readonly<Record<TermStudyStatus, string>> = {
+  unseen: "未学習",
+  learning: "学習中",
+  mastered: "習得",
+};
+
+function isNonNegativeInt(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0;
+}
+
+export function isTermProgress(value: unknown): value is TermProgress {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
+  const record = value as Record<string, unknown>;
+  return (
+    typeof record.termId === "string" &&
+    record.termId.length > 0 &&
+    isNonNegativeInt(record.seenCount) &&
+    isNonNegativeInt(record.quizCorrect) &&
+    isNonNegativeInt(record.quizIncorrect) &&
+    typeof record.lastStudiedAt === "string" &&
+    record.lastStudiedAt.length > 0
+  );
+}
