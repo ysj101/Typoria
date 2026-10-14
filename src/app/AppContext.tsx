@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppContext } from "./context";
 import type { ReactNode } from "react";
 import {
@@ -34,40 +34,48 @@ export function AppProvider({ storage: storageProp, children }: AppProviderProps
   const [ready, setReady] = useState(false);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [progress, setProgress] = useState<UserProgress>(DEFAULT_PROGRESS);
+  const settingsRef = useRef(settings);
+  // 連続した更新の書き込み順を保つ。遅い先行書き込みが後の値を上書きしない。
+  const settingsWrite = useRef(Promise.resolve());
+
+  const publishSettings = useCallback((next: Settings) => {
+    settingsRef.current = next;
+    setSettings(next);
+  }, []);
 
   const refresh = useCallback(async () => {
     const [s, p] = await Promise.all([storage.getSettings(), storage.getProgress()]);
-    setSettings(s);
+    publishSettings(s);
     setProgress(p);
     setReady(true);
-  }, [storage]);
+  }, [publishSettings, storage]);
 
   useEffect(() => {
     let cancelled = false;
     void (async () => {
       const [s, p] = await Promise.all([storage.getSettings(), storage.getProgress()]);
       if (cancelled) return;
-      setSettings(s);
+      publishSettings(s);
       setProgress(p);
       setReady(true);
     })();
     return () => {
       cancelled = true;
     };
-  }, [storage]);
+  }, [publishSettings, storage]);
 
   const updateSettings = useCallback(
     async (patch: Partial<Settings>) => {
-      let next: Settings | undefined;
-      setSettings((prev) => {
-        next = { ...prev, ...patch };
-        return next;
-      });
-      // setState の更新関数は同期的に実行されるが、念のため現在値から再計算する
-      const merged = next ?? { ...settings, ...patch };
-      await storage.putSettings(merged);
+      const merged = { ...settingsRef.current, ...patch };
+      publishSettings(merged);
+      const write = settingsWrite.current.then(() => storage.putSettings(merged));
+      settingsWrite.current = write.then(
+        () => undefined,
+        () => undefined,
+      );
+      await write;
     },
-    [settings, storage],
+    [publishSettings, storage],
   );
 
   const updateProgress = useCallback(

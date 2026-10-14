@@ -10,6 +10,7 @@ import {
   readAnswer,
   startGame,
   typeAnswer,
+  typeChars,
   typedCount,
   waitForStoredSettings,
   wrongCharFor,
@@ -47,10 +48,10 @@ test.describe("受け入れ基準 §16", () => {
   test("AC-03 正しい文字でカーソルが進み、誤った文字では進まない", async ({ page }) => {
     await startGame(page);
     const answer = await readAnswer(page);
-    await page.keyboard.type(wrongCharFor(answer));
+    await typeChars(page, wrongCharFor(answer));
     await expect(typedCount(page)).toHaveCount(0);
     await expect(page.getByTestId("answer")).toHaveAttribute("data-last-input", "incorrect");
-    await page.keyboard.type(answer[0]!);
+    await typeChars(page, answer[0]!);
     await expect(typedCount(page)).toHaveCount(1);
     await expect(page.getByTestId("answer")).toHaveAttribute("data-last-input", "correct");
   });
@@ -59,10 +60,10 @@ test.describe("受け入れ基準 §16", () => {
     await startGame(page);
     const id = await currentQuestionId(page);
     const answer = await readAnswer(page);
-    await page.keyboard.type(answer[0]!);
-    await page.keyboard.type(wrongCharFor(answer));
+    await typeChars(page, answer[0]!);
+    await typeChars(page, wrongCharFor(answer));
     await expect(typedCount(page)).toHaveCount(1);
-    await page.keyboard.type(answer.slice(1));
+    await typeChars(page, answer.slice(1));
     await expect(page.getByTestId("typing-input")).not.toHaveAttribute("data-question-id", id);
     // 誤入力があったので PERFECT ではない（easy 100 点）
     await expect(page.getByTestId("hud-score")).toHaveText("100");
@@ -197,7 +198,7 @@ test.describe("受け入れ基準 §16", () => {
     }, first);
     await expect(typedCount(page)).toHaveCount(0);
     await expect(page.getByTestId("answer")).toHaveAttribute("data-last-input", "none");
-    await page.keyboard.type(first);
+    await typeChars(page, first);
     await expect(typedCount(page)).toHaveCount(1);
   });
 
@@ -261,7 +262,7 @@ test.describe("受け入れ基準 §16（設定）", () => {
     );
     await startGame(page);
     await clearQuestions(page, 2);
-    await page.keyboard.type("z");
+    await typeChars(page, "z");
     const audio = await page.evaluate(
       () => (window as unknown as { __audio: { oscillators: number } }).__audio,
     );
