@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router";
+import { isLearnRoundResult, type LearnRoundResult } from "../game/learnQuiz";
 import type { DailyMissionId, Difficulty, GameSession } from "../types/game";
 
 /** ルートパス（docs/spec.md §4 画面構成） */
@@ -31,11 +32,15 @@ export function useAppNavigate() {
     (payload: ResultPayload) => navigate(ROUTES.result, { state: payload, replace: true }),
     [navigate],
   );
+  const toLearnResult = useCallback(
+    (result: LearnRoundResult) => navigate(ROUTES.result, { state: result, replace: true }),
+    [navigate],
+  );
   const toHistory = useCallback(() => navigate(ROUTES.history), [navigate]);
   const toSettings = useCallback(() => navigate(ROUTES.settings), [navigate]);
   return useMemo(
-    () => ({ toHome, toGame, toLearn, toResult, toHistory, toSettings }),
-    [toHome, toGame, toLearn, toResult, toHistory, toSettings],
+    () => ({ toHome, toGame, toLearn, toResult, toLearnResult, toHistory, toSettings }),
+    [toHome, toGame, toLearn, toResult, toLearnResult, toHistory, toSettings],
   );
 }
 
@@ -49,4 +54,10 @@ function isResultPayload(value: unknown): value is ResultPayload {
 export function useResultPayload(): ResultPayload | null {
   const location = useLocation();
   return isResultPayload(location.state) ? location.state : null;
+}
+
+/** 学習ラウンドの結果。90 秒モードの payload とは別 */
+export function useLearnResult(): LearnRoundResult | null {
+  const location = useLocation();
+  return isLearnRoundResult(location.state) ? location.state : null;
 }

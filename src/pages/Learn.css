@@ -134,3 +134,94 @@
 .learn-learned li {
   padding: 0.125rem 0;
 }
+
+.learn-stage--quiz {
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.learn-quiz {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.learn-quiz__question {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.learn-quiz__choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.learn-quiz__choices li {
+  width: 100%;
+  min-width: 0;
+}
+
+.learn-quiz__choice {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-subtext);
+  border-radius: 0.75rem;
+  background: rgb(11 16 38 / 88%);
+  color: var(--color-text);
+  font-size: 1rem;
+  line-height: 1.5;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.learn-quiz__choice[data-selected="true"] {
+  border-color: var(--color-text);
+}
+
+.learn-quiz__choice[data-correct-choice="true"] {
+  border-color: var(--color-correct);
+}
+
+.learn-quiz__mark {
+  margin-left: 0.25rem;
+  color: var(--color-correct);
+  font-weight: 700;
+}
+
+.learn-quiz__feedback {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.learn-quiz__judgment {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.learn-quiz__feedback p {
+  margin: 0;
+}
+
+.learn-quiz__result {
+  align-self: center;
+}

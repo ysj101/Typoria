@@ -2,13 +2,20 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type React from "react";
 import { useAppNavigate } from "../app/navigation";
 import { selectTerms } from "../data/terms";
+import { LearnQuizView } from "../components/LearnQuizView";
+import {
+  answerLearnQuiz,
+  createLearnQuiz,
+  createLearnRoundResult,
+  type LearnQuizState,
+  type QuizChoiceIndex,
+} from "../game/learnQuiz";
 import {
   beginTyping,
   createLearnRound,
   currentTerm,
   inputLearnChar,
   requestQuiz,
-  type LearnQuizTransition,
   type LearnRoundState,
 } from "../game/learnRound";
 import type { TypingState } from "../game/typing";
@@ -20,20 +27,24 @@ import "./Learn.css";
 export interface LearnProps {
   /** 未指定なら全カテゴリから既定の 3 語 */
   terms?: readonly Term[];
+  /** 理解度クイズの出題と選択肢シャッフル。未指定は Math.random */
+  rng?: () => number;
+  /** クイズの回答時刻。未指定は現在時刻 */
+  now?: () => Date;
 }
 
 /**
  * 学習モード（#74）。
- * 1 ラウンドは「解説を読む → typingText を打つ」を既定 3 語くり返し、ラウンド終了で止める。
- * 理解度クイズ（#75）へは `requestQuiz` で渡す。この画面の先は仮の完了表示。
+ * 1 ラウンドは「解説を読む → typingText を打つ」を既定 3 語くり返し、
+ * ラウンド終了後に理解度クイズへ進む。
  */
-export function Learn({ terms }: LearnProps) {
+export function Learn({ terms, rng, now }: LearnProps) {
   const nav = useAppNavigate();
   const { compact } = useVisualViewport();
   const [round, setRound] = useState<LearnRoundState>(() =>
     createLearnRound(terms ?? selectTerms()),
   );
-  const [quiz, setQuiz] = useState<LearnQuizTransition | null>(null);
+  const [quiz, setQuiz] = useState<LearnQuizState | null>(null);
   const containerRef = useRef<HTMLElement>(null);
   const typingInputRef = useRef<HTMLInputElement>(null);
   const beginButtonRef = useRef<HTMLButtonElement>(null);
@@ -68,9 +79,10 @@ export function Learn({ terms }: LearnProps) {
   }, [round.phase]);
 
   useEffect(() => {
+    if (quiz) return;
     if (round.phase === "reading") beginButtonRef.current?.focus();
     if (round.phase === "roundEnd") quizButtonRef.current?.focus();
-  }, [round.phase, round.index]);
+  }, [quiz, round.phase, round.index]);
 
   const keyboardOpen = round.phase === "typing";
   const keepSoftKeyboard = useCallback(
@@ -85,17 +97,25 @@ export function Learn({ terms }: LearnProps) {
   const term = currentTerm(round);
   const onQuiz = () => {
     const next = requestQuiz(round);
-    if (next) setQuiz(next);
+    if (!next) return;
+    setQuiz(createLearnQuiz(next.handoff.terms, { rng }));
+  };
+  const onAnswer = (sourceIndex: QuizChoiceIndex) => {
+    setQuiz((current) => (current ? answerLearnQuiz(current, sourceIndex, now) : current));
+  };
+  const onLearnResult = () => {
+    if (!quiz?.result) return;
+    nav.toLearnResult(createLearnRoundResult(round.terms, quiz.result));
   };
 
   return (
     <section
       ref={containerRef}
       tabIndex={-1}
-      aria-label="学習ラウンド"
+      aria-label={quiz ? "理解度クイズ" : "学習ラウンド"}
       className={`learn-screen outline-none${compact ? " learn-screen--compact" : ""}`}
       data-testid="learn"
-      data-phase={round.phase}
+      data-phase={quiz ? "quiz" : round.phase}
       data-compact={compact ? "true" : "false"}
       data-term-id={term?.id ?? ""}
       onMouseDown={keepSoftKeyboard}
@@ -120,6 +140,7 @@ export function Learn({ terms }: LearnProps) {
       <div className="learn-screen__column">
         <header className="flex flex-col gap-1">
           <h1 className="learn-title text-subtext">IT基礎用語</h1>
+          {quiz && <p className="learn-kicker text-subtext">理解度クイズ</p>}
           {term && (
             <>
               <p className="learn-kicker text-subtext">
@@ -148,7 +169,7 @@ export function Learn({ terms }: LearnProps) {
           </p>
         )}
 
-        <div className="learn-stage">
+        <div className={`learn-stage${quiz ? " learn-stage--quiz" : ""}`}>
           {round.phase === "reading" && term && (
             <button
               ref={beginButtonRef}
@@ -160,15 +181,15 @@ export function Learn({ terms }: LearnProps) {
             </button>
           )}
           {round.phase === "typing" && round.typing && <LearnAnswer typing={round.typing} />}
-          {round.phase === "roundEnd" && (
+          {round.phase === "roundEnd" && !quiz && (
             <RoundEnd
               round={round}
-              quiz={quiz}
               quizButtonRef={quizButtonRef}
               onQuiz={onQuiz}
               onHome={nav.toHome}
             />
           )}
+          {quiz && <LearnQuizView quiz={quiz} onAnswer={onAnswer} onResult={onLearnResult} />}
         </div>
 
         {round.phase !== "roundEnd" && (
@@ -240,13 +261,11 @@ function LearnAnswer({ typing }: { typing: TypingState }) {
 
 function RoundEnd({
   round,
-  quiz,
   quizButtonRef,
   onQuiz,
   onHome,
 }: {
   round: LearnRoundState;
-  quiz: LearnQuizTransition | null;
   quizButtonRef: React.RefObject<HTMLButtonElement | null>;
   onQuiz: () => void;
   onHome: () => void;
@@ -263,28 +282,16 @@ function RoundEnd({
           <li key={item.id}>{item.name}</li>
         ))}
       </ul>
-      {quiz ? (
-        <p
-          role="status"
-          data-testid="learn-quiz-placeholder"
-          data-next-phase={quiz.phase}
-          data-term-ids={quiz.handoff.terms.map((item) => item.id).join(" ")}
-          className="text-sm text-subtext"
-        >
-          理解度クイズは次の更新で始まります。
-        </p>
-      ) : (
-        <button
-          ref={quizButtonRef}
-          type="button"
-          data-testid="learn-to-quiz"
-          data-next-phase="quiz"
-          onClick={onQuiz}
-          className="rounded-full bg-perfect px-8 py-3 font-bold text-bg focus-visible:ring-4 focus-visible:ring-fever"
-        >
-          理解度クイズへ
-        </button>
-      )}
+      <button
+        ref={quizButtonRef}
+        type="button"
+        data-testid="learn-to-quiz"
+        data-next-phase="quiz"
+        onClick={onQuiz}
+        className="rounded-full bg-perfect px-8 py-3 font-bold text-bg focus-visible:ring-4 focus-visible:ring-fever"
+      >
+        理解度クイズへ
+      </button>
       <button
         type="button"
         onClick={onHome}
