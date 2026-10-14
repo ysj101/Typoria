@@ -3,11 +3,12 @@ import { Layout } from "./Layout";
 import { ROUTES } from "./navigation";
 import { Home } from "../pages/Home";
 import { Game } from "../pages/Game";
+import { Learn } from "../pages/Learn";
 import { Result } from "../pages/Result";
 import { History } from "../pages/History";
 import { Settings } from "../pages/Settings";
 
-/** 5 画面のルート定義（docs/spec.md §4） */
+/** 画面ルート（docs/spec.md §4 の 5 画面に、学習モード /learn を加える） */
 export const routes: RouteObject[] = [
   {
     path: "/",
@@ -15,6 +16,7 @@ export const routes: RouteObject[] = [
     children: [
       { index: true, element: <Home /> },
       { path: ROUTES.game.slice(1), element: <Game /> },
+      { path: ROUTES.learn.slice(1), element: <Learn /> },
       { path: ROUTES.result.slice(1), element: <Result /> },
       { path: ROUTES.history.slice(1), element: <History /> },
       { path: ROUTES.settings.slice(1), element: <Settings /> },

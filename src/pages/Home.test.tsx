@@ -95,6 +95,14 @@ describe("Home (§4.1)", () => {
     expect(screen.getByTestId("mission-solve_10")).toHaveTextContent("0/10");
   });
 
+  it("opens the learn mode without starting the 90 second game", async () => {
+    const router = renderHome();
+    await userEvent.click(await screen.findByRole("button", { name: "IT用語を学ぶ" }));
+    expect(router.state.location.pathname).toBe(ROUTES.learn);
+    expect(screen.getByRole("heading", { name: "IT基礎用語" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Game" })).not.toBeInTheDocument();
+  });
+
   it("starts the game with Enter on the autofocused PLAY button", async () => {
     const router = renderHome();
     await screen.findByRole("button", { name: "PLAY" });

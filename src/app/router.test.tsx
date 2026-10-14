@@ -23,6 +23,7 @@ describe("routing (§4)", () => {
   it.each([
     [ROUTES.home, "Typoria"],
     [ROUTES.game, "Game"],
+    [ROUTES.learn, "IT基礎用語"],
     // Result は route state が無いとホームへリダイレクトする（#18）
     [ROUTES.result, "Typoria"],
     [ROUTES.history, "History"],

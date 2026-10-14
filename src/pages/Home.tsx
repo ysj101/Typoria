@@ -43,6 +43,9 @@ export function Home() {
     unlockAudio();
     nav.toGame();
   };
+  const onLearn = () => {
+    nav.toLearn();
+  };
 
   return (
     <main className="screen-scroll screen-center mx-auto w-full max-w-xl items-center gap-4 px-4 py-4 sm:gap-8 sm:py-10">
@@ -62,16 +65,25 @@ export function Home() {
         </ol>
       </header>
 
-      <button
-        type="button"
-        autoFocus
-        onClick={onPlay}
-        onTouchStart={unlockAudio}
-        onTouchEnd={unlockAudio}
-        className="rounded-full bg-perfect px-10 py-3 text-xl font-bold text-bg shadow-lg transition-transform hover:scale-105 focus:outline-none focus-visible:ring-4 focus-visible:ring-fever sm:px-12 sm:py-4 sm:text-2xl"
-      >
-        PLAY
-      </button>
+      <div className="flex flex-col items-center gap-2 sm:gap-3">
+        <button
+          type="button"
+          autoFocus
+          onClick={onPlay}
+          onTouchStart={unlockAudio}
+          onTouchEnd={unlockAudio}
+          className="rounded-full bg-perfect px-10 py-3 text-xl font-bold text-bg shadow-lg transition-transform hover:scale-105 focus:outline-none focus-visible:ring-4 focus-visible:ring-fever sm:px-12 sm:py-4 sm:text-2xl"
+        >
+          PLAY
+        </button>
+        <button
+          type="button"
+          onClick={nav.toLearn}
+          className="rounded-full border border-perfect px-8 py-2.5 text-base font-bold text-perfect focus:outline-none focus-visible:ring-4 focus-visible:ring-fever sm:py-3 sm:text-lg"
+        >
+          IT用語を学ぶ
+        </button>
+      </div>
 
       <dl
         aria-label="学習状況"
