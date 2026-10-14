@@ -152,6 +152,8 @@ test.describe("keyboard", () => {
     await page.goto("/");
     await expect(page.getByRole("button", { name: "PLAY" })).toBeFocused();
     await page.keyboard.press(tab);
+    await expect(page.getByRole("button", { name: "IT用語を学ぶ" })).toBeFocused();
+    await page.keyboard.press(tab);
     await expect(page.getByRole("link", { name: "学習履歴" })).toBeFocused();
     await page.keyboard.press(tab);
     await expect(page.getByRole("link", { name: "設定" })).toBeFocused();
