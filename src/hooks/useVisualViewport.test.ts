@@ -12,6 +12,30 @@ describe("useVisualViewport", () => {
     document.documentElement.style.removeProperty("--vv-top");
   });
 
+  it("reports the keyboard inset between the layout viewport and visualViewport", () => {
+    const previousHeight = window.innerHeight;
+    Object.defineProperty(window, "innerHeight", { configurable: true, value: 800 });
+    const listeners = new Map<string, () => void>();
+    const vv = {
+      height: 470,
+      offsetTop: 0,
+      addEventListener: (type: string, fn: () => void) => listeners.set(type, fn),
+      removeEventListener: (type: string) => listeners.delete(type),
+    };
+    Object.defineProperty(window, "visualViewport", { configurable: true, value: vv });
+
+    const { result } = renderHook(() => useVisualViewport());
+    expect(result.current.compact).toBe(true);
+    expect(result.current.inset).toBe(330);
+
+    vv.height = 800;
+    act(() => listeners.get("resize")?.());
+    expect(result.current.compact).toBe(false);
+    expect(result.current.inset).toBe(0);
+
+    Object.defineProperty(window, "innerHeight", { configurable: true, value: previousHeight });
+  });
+
   it("publishes visualViewport size and compacts short heights", () => {
     const listeners = new Map<string, () => void>();
     const vv = {

@@ -6,6 +6,7 @@
   --learn-pad-b: max(0.75rem, env(safe-area-inset-bottom));
   --learn-name: 1.75rem;
   --learn-answer: 1.75rem;
+  /* 解説本文は 16px 未満にしない（#77） */
   --learn-explanation: 1rem;
   --learn-explanation-max: 0.4;
 
@@ -37,8 +38,20 @@
   --learn-pad-b: max(0.25rem, env(safe-area-inset-bottom));
   --learn-name: 1.125rem;
   --learn-answer: 1.05rem;
-  --learn-explanation: 0.8125rem;
+  --learn-explanation: 1rem;
   --learn-explanation-max: 0.28;
+}
+
+/* 90 秒モードの画面シェイクは学習モードでは使わない */
+.learn-screen[data-shake] {
+  animation: none !important;
+}
+
+.learn-screen[data-reduced-motion="true"],
+.learn-screen[data-reduced-motion="true"] * {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
 }
 
 .learn-screen__column {
@@ -48,6 +61,7 @@
   gap: var(--learn-gap);
   width: 100%;
   max-width: 40rem;
+  min-width: 0;
   min-height: 0;
   margin-inline: auto;
   overflow: hidden;
@@ -56,6 +70,43 @@
 .learn-screen__column > header,
 .learn-footer {
   flex-shrink: 0;
+}
+
+.learn-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.learn-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.learn-quit,
+.learn-tap {
+  box-sizing: border-box;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.learn-quit {
+  flex: 0 0 auto;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-subtext);
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--color-text);
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.learn-quit:hover {
+  border-color: var(--color-text);
 }
 
 .learn-title {
@@ -70,6 +121,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem 0.75rem;
+  min-width: 0;
   margin: 0;
   font-size: 0.8125rem;
   line-height: 1.2;
@@ -77,20 +129,38 @@
 
 .learn-name {
   margin: 0;
+  color: var(--color-text);
   font-size: var(--learn-name);
+  font-weight: 700;
   line-height: 1.2;
   overflow-wrap: anywhere;
 }
 
 .learn-explanation {
   flex: 0 1 auto;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   max-height: calc(var(--vvh, 100dvh) * var(--learn-explanation-max));
   margin: 0;
   overflow: auto;
+  color: var(--color-text);
   font-size: var(--learn-explanation);
-  line-height: 1.55;
+  line-height: 1.7;
   overflow-wrap: anywhere;
   overscroll-behavior: contain;
+}
+
+.learn-term {
+  color: var(--color-perfect);
+  font-weight: 700;
+}
+
+.learn-explanation--collapsed {
+  max-height: none;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .learn-stage {
@@ -101,8 +171,10 @@
   justify-content: center;
   gap: 0.75rem;
   width: 100%;
+  min-width: 0;
   min-height: 0;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .learn-answer {
@@ -208,7 +280,7 @@
   gap: 0.25rem;
   margin: 0;
   font-size: 1rem;
-  line-height: 1.6;
+  line-height: 1.7;
   overflow-wrap: anywhere;
 }
 
