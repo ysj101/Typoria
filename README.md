@@ -3,7 +3,7 @@
 [![CI](https://github.com/ysj101/Typoria/actions/workflows/ci.yml/badge.svg)](https://github.com/ysj101/Typoria/actions/workflows/ci.yml)
 [![Deploy](https://github.com/ysj101/Typoria/actions/workflows/deploy.yml/badge.svg)](https://github.com/ysj101/Typoria/actions/workflows/deploy.yml)
 
-タイピングで英語を学ぶ 90 秒のブラウザゲーム。
+新人エンジニアがスマートフォンで数分、IT の基礎用語を読んで、打って、クイズで覚える学習アプリ。
 
 ## 起動方法
 
