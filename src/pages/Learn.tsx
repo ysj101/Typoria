@@ -84,9 +84,6 @@ export function Learn({ terms, rng, now }: LearnProps) {
   const beginButtonRef = useRef<HTMLButtonElement>(null);
   const quizButtonRef = useRef<HTMLButtonElement>(null);
   const answerRef = useRef<HTMLParagraphElement>(null);
-  // 乱数は出題時に 1 回読むだけなので、呼び出し側が毎回新しい関数を渡しても再選択しない
-  const rngRef = useRef(rng);
-  rngRef.current = rng;
 
   // 用語が決まっていなければ、カテゴリ指定か学習記録に基づくおまかせで選ぶ
   useEffect(() => {
@@ -96,15 +93,15 @@ export function Learn({ terms, rng, now }: LearnProps) {
       const progress = category ? [] : await storage.listTermProgress();
       if (cancelled) return;
       const picked = category
-        ? selectTerms({ category, rng: rngRef.current })
-        : selectOmakaseTerms({ progress, rng: rngRef.current });
+        ? selectTerms({ category, rng })
+        : selectOmakaseTerms({ progress, rng });
       setRound(createLearnRound(picked));
       setQuiz(null);
     })();
     return () => {
       cancelled = true;
     };
-  }, [initial, category, storage]);
+  }, [initial, category, storage, rng]);
 
   // ラウンド終了は round にとって終端なので、この effect は roundEnd に入ったとき 1 回だけ走る
   useEffect(() => {
@@ -184,7 +181,7 @@ export function Learn({ terms, rng, now }: LearnProps) {
   };
   const onQuiz = () => {
     const next = round && requestQuiz(round);
-    if (next) setQuiz(createLearnQuiz(next.handoff.terms, { rng: rngRef.current }));
+    if (next) setQuiz(createLearnQuiz(next.handoff.terms, { rng }));
   };
   const onAnswer = (sourceIndex: QuizChoiceIndex) => {
     if (!quiz || quiz.phase !== "asking") return;

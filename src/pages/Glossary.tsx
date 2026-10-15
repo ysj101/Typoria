@@ -1,38 +1,26 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { ROUTES } from "../app/navigation";
 import { useAppContext } from "../app/useAppContext";
 import { TERMS } from "../data/terms";
 import { termStudyStatus } from "../game/termProgress";
-import {
-  TERM_CATEGORIES,
-  TERM_CATEGORY_LABELS,
-  TERM_STUDY_STATUS_LABELS,
-  type TermProgress,
-} from "../types/term";
+import { useTermProgress } from "../hooks/useTermProgress";
+import { TERM_CATEGORIES, TERM_CATEGORY_LABELS, TERM_STUDY_STATUS_LABELS } from "../types/term";
+import { TERM_ROW_BUTTON_CLASS } from "./CategorySelect";
+
+/** 用語データは静的なので、カテゴリ別のグループ分けは読み込み時に 1 回だけ行う */
+const GROUPS = TERM_CATEGORIES.map((category) => ({
+  category,
+  label: TERM_CATEGORY_LABELS[category],
+  terms: TERMS.filter((term) => term.category === category),
+}));
 
 /** 学習した用語を読み返せる用語帳。カテゴリ別に状態を出し、タップで解説を開く */
 export function Glossary() {
   const { storage } = useAppContext();
-  const [progress, setProgress] = useState<TermProgress[]>([]);
+  const progress = useTermProgress(storage);
   const [openId, setOpenId] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    void storage.listTermProgress().then((rows) => {
-      if (!cancelled) setProgress(rows);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [storage]);
-
   const byId = useMemo(() => new Map(progress.map((row) => [row.termId, row])), [progress]);
-  const groups = TERM_CATEGORIES.map((category) => ({
-    category,
-    label: TERM_CATEGORY_LABELS[category],
-    terms: TERMS.filter((term) => term.category === category),
-  }));
 
   return (
     <main className="screen-scroll mx-auto w-full max-w-xl gap-6 px-4 py-10">
@@ -46,7 +34,7 @@ export function Glossary() {
         </Link>
       </header>
       <p className="text-subtext">用語をタップすると解説を読み返せます。</p>
-      {groups.map((group) => (
+      {GROUPS.map((group) => (
         <section
           key={group.category}
           aria-labelledby={`glossary-${group.category}`}
@@ -70,7 +58,7 @@ export function Glossary() {
                     data-term-id={term.id}
                     data-status={status}
                     onClick={() => setOpenId(open ? null : term.id)}
-                    className="flex min-h-11 w-full min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-2xl border border-subtext/40 px-4 py-3 text-left focus:outline-none focus-visible:ring-4 focus-visible:ring-fever"
+                    className={TERM_ROW_BUTTON_CLASS}
                   >
                     <span className="font-bold">{term.name}</span>
                     <span className="text-sm text-subtext">{TERM_STUDY_STATUS_LABELS[status]}</span>

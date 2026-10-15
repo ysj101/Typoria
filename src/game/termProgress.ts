@@ -2,9 +2,16 @@
  * 用語の学習状態、ラウンド結果の反映、おまかせ出題。
  * 状態は未学習 / 学習中（読んだがクイズ未正解）/ 習得（クイズに 1 回以上正解）。
  */
-import type { LearnQuizResult, LearnRoundResult } from "./learnQuiz";
-import { TERMS, TERMS_PER_ROUND, selectTerms, type TermRng } from "../data/terms";
-import type { Term, TermCategory, TermProgress, TermStudyStatus } from "../types/term";
+import type { LearnQuizResult } from "./learnQuiz";
+import type { Rng } from "./questions";
+import { TERMS, TERMS_PER_ROUND, selectTerms } from "../data/terms";
+import {
+  TERM_CATEGORIES,
+  type Term,
+  type TermCategory,
+  type TermProgress,
+  type TermStudyStatus,
+} from "../types/term";
 
 export interface TermProgressStorage {
   listTermProgress(): Promise<readonly TermProgress[]>;
@@ -31,15 +38,9 @@ export function categoryStudyCounts(
   progress: readonly TermProgress[],
 ): Record<TermCategory, CategoryStudyCount> {
   const byId = new Map(progress.map((row) => [row.termId, row]));
-  const counts: Record<TermCategory, CategoryStudyCount> = {
-    ai: { mastered: 0, total: 0 },
-    cloud: { mastered: 0, total: 0 },
-    security: { mastered: 0, total: 0 },
-    network: { mastered: 0, total: 0 },
-    web: { mastered: 0, total: 0 },
-    database: { mastered: 0, total: 0 },
-    dev: { mastered: 0, total: 0 },
-  };
+  const counts = Object.fromEntries(
+    TERM_CATEGORIES.map((category) => [category, { mastered: 0, total: 0 }]),
+  ) as Record<TermCategory, CategoryStudyCount>;
   for (const term of terms) {
     const bucket = counts[term.category];
     bucket.total += 1;
@@ -101,22 +102,6 @@ export function applyQuizResult(
 }
 
 /**
- * #75 のラウンド結果を学習記録へ反映する。
- * 読んだ用語は seenCount、クイズ対象は正誤カウント。入力の配列は変更しない。
- */
-export function applyLearnRoundResult(
-  current: readonly TermProgress[],
-  result: LearnRoundResult,
-): TermProgress[] {
-  const seen = applyTermsSeen(
-    current,
-    result.terms.map((term) => term.termId),
-    result.quiz.answeredAt,
-  );
-  return applyQuizResult(seen, result.quiz);
-}
-
-/**
  * 同じストレージへの更新を直列化する。
  * ラウンド完了の seen 更新と、その直後のクイズ結果が互いを上書きしない。
  */
@@ -131,17 +116,14 @@ export function enqueueTermProgressUpdate(
   });
   chains.set(
     storage,
-    run.then(
-      () => undefined,
-      () => undefined,
-    ),
+    run.catch(() => undefined),
   );
   return run;
 }
 
 export interface SelectOmakaseOptions {
   count?: number;
-  rng?: TermRng;
+  rng?: Rng;
   terms?: readonly Term[];
   progress?: readonly TermProgress[];
 }
@@ -166,9 +148,7 @@ export function selectOmakaseTerms({
     if (termStudyStatus(byId.get(term.id)) === "mastered") mastered.push(term);
     else preferred.push(term);
   }
-  const preferredCount = Math.min(count, preferred.length);
-  const first =
-    preferredCount === 0 ? [] : selectTerms({ terms: preferred, count: preferredCount, rng });
+  const first = selectTerms({ terms: preferred, count: Math.min(count, preferred.length), rng });
   const restCount = count - first.length;
   if (restCount === 0) return first;
   if (restCount > mastered.length) {

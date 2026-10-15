@@ -1,30 +1,20 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { useAppNavigate, ROUTES } from "../app/navigation";
 import { useAppContext } from "../app/useAppContext";
 import { TERMS } from "../data/terms";
 import { categoryStudyCounts } from "../game/termProgress";
-import { TERM_CATEGORIES, TERM_CATEGORY_LABELS, type TermProgress } from "../types/term";
+import { useTermProgress } from "../hooks/useTermProgress";
+import { TERM_CATEGORIES, TERM_CATEGORY_LABELS } from "../types/term";
 
-const BUTTON_CLASS =
+/** カテゴリ選択・用語帳で使う、1 行 1 ボタンの共通スタイル */
+export const TERM_ROW_BUTTON_CLASS =
   "flex min-h-11 w-full min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-2xl border border-subtext/40 px-4 py-3 text-left focus:outline-none focus-visible:ring-4 focus-visible:ring-fever";
 
 /** カテゴリ選択。習得数を出して、そのカテゴリのラウンドかおまかせを始める */
 export function CategorySelect() {
   const { storage } = useAppContext();
   const nav = useAppNavigate();
-  const [progress, setProgress] = useState<TermProgress[]>([]);
-
-  useEffect(() => {
-    let cancelled = false;
-    void storage.listTermProgress().then((rows) => {
-      if (!cancelled) setProgress(rows);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [storage]);
-
+  const progress = useTermProgress(storage);
   const counts = categoryStudyCounts(TERMS, progress);
 
   return (
@@ -61,7 +51,7 @@ export function CategorySelect() {
                 data-mastered={mastered}
                 data-total={total}
                 onClick={() => nav.toLearnRound({ mode: "category", category })}
-                className={BUTTON_CLASS}
+                className={TERM_ROW_BUTTON_CLASS}
               >
                 <span className="font-bold">{label}</span>
                 <span className="text-sm text-subtext tabular-nums">

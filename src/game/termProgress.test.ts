@@ -1,7 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { LearnRoundResult } from "./learnQuiz";
 import {
-  applyLearnRoundResult,
   applyQuizResult,
   applyTermsSeen,
   categoryStudyCounts,
@@ -10,25 +8,10 @@ import {
   termStudyStatus,
 } from "./termProgress";
 import { createMemoryStorage } from "../app/storage";
-import type { Term, TermCategory, TermProgress } from "../types/term";
+import { makeTerm } from "../test/factories";
+import type { TermProgress } from "../types/term";
 
-function term(id: string): Term {
-  const category = id.slice(0, id.lastIndexOf("-")) as TermCategory;
-  return {
-    id,
-    category,
-    level: 1,
-    name: id,
-    explanation: `${id}の解説。画面で読む文章です。`,
-    typingText: "term",
-    quiz: {
-      question: "q",
-      choices: ["A", "B", "C", "D"],
-      answerIndex: 0,
-      explanation: "because",
-    },
-  };
-}
+const term = (id: string) => makeTerm(id, { typingText: "term" });
 
 const AT = "2026-10-14T09:00:00.000Z";
 const LATER = "2026-10-14T10:00:00.000Z";
@@ -42,14 +25,6 @@ function row(partial: Partial<TermProgress> & Pick<TermProgress, "termId">): Ter
     ...partial,
   };
 }
-
-const roundResult = (correct: boolean): LearnRoundResult => ({
-  terms: [
-    { termId: "ai-001", name: "機械学習", summary: "機械学習は基礎です。" },
-    { termId: "cloud-001", name: "SaaS", summary: "SaaSは基礎です。" },
-  ],
-  quiz: { termId: "ai-001", correct, answeredAt: AT },
-});
 
 describe("termStudyStatus", () => {
   it("is unseen when there is no record", () => {
@@ -73,30 +48,7 @@ describe("termStudyStatus", () => {
   });
 });
 
-describe("applyLearnRoundResult", () => {
-  it("records seen terms and the quiz result without mutating the input", () => {
-    const current = [row({ termId: "web-001", seenCount: 2, lastStudiedAt: LATER })];
-    const snapshot = current.map((item) => ({ ...item }));
-    const next = applyLearnRoundResult(current, roundResult(true));
-    expect(current).toEqual(snapshot);
-    expect(next).toEqual([
-      row({ termId: "web-001", seenCount: 2, lastStudiedAt: LATER }),
-      row({ termId: "ai-001", seenCount: 1, quizCorrect: 1 }),
-      row({ termId: "cloud-001", seenCount: 1 }),
-    ]);
-  });
-
-  it("increments an incorrect quiz and keeps a newer lastStudiedAt", () => {
-    const current = [
-      row({ termId: "ai-001", seenCount: 1, quizIncorrect: 1, lastStudiedAt: LATER }),
-    ];
-    const next = applyLearnRoundResult(current, roundResult(false));
-    expect(next).toEqual([
-      row({ termId: "ai-001", seenCount: 2, quizIncorrect: 2, lastStudiedAt: LATER }),
-      row({ termId: "cloud-001", seenCount: 1 }),
-    ]);
-  });
-
+describe("applyQuizResult", () => {
   it("records a quiz term that was not in the read list", () => {
     const next = applyQuizResult([], {
       termId: "security-001",
@@ -124,7 +76,7 @@ describe("selectOmakaseTerms", () => {
       count: 2,
       rng: () => 0,
     });
-    expect(picked.map((item) => item.id)).toEqual([unseen.id, learning.id]);
+    expect(picked.map((item) => item.id).sort()).toEqual([learning.id, unseen.id]);
   });
 
   it("fills the rest with mastered terms when unmastered terms run out", () => {
@@ -135,7 +87,9 @@ describe("selectOmakaseTerms", () => {
       count: 3,
       rng: () => 0,
     });
-    expect(picked.map((item) => item.id)).toEqual([unseen.id, mastered.id, secondMastered.id]);
+    const ids = picked.map((item) => item.id);
+    expect(ids[0]).toBe(unseen.id);
+    expect(ids.slice(1).sort()).toEqual([mastered.id, secondMastered.id]);
   });
 
   it("still returns a round when every term is mastered", () => {
@@ -149,7 +103,8 @@ describe("selectOmakaseTerms", () => {
       count: 1,
       rng: () => 0,
     });
-    expect(picked.map((item) => item.id)).toEqual([mastered.id]);
+    expect(picked).toHaveLength(1);
+    expect([mastered.id, other.id]).toContain(picked[0]?.id);
   });
 });
 

@@ -116,9 +116,7 @@ test.describe("learn round", () => {
     await expect(page.getByTestId("glossary-explanation")).not.toBeEmpty();
     await page.reload();
     await expect(page.getByRole("heading", { name: "用語帳" })).toBeVisible();
-    await expect(
-      page.locator(`[data-testid=glossary-term][data-term-id="${termIds[0]}"]`),
-    ).toHaveAttribute("data-status", /learning|mastered/);
+    await expect(studied).toHaveAttribute("data-status", /learning|mastered/);
     await expectNoHorizontalScroll(page);
     await expectNoSeriousViolations(page, "Glossary");
   });
@@ -184,6 +182,7 @@ test.describe("learn round", () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
     await page.getByRole("button", { name: "IT用語を学ぶ" }).click();
+    await page.getByRole("button", { name: /おまかせ/ }).click();
     await expect(page.getByTestId("learn")).toHaveAttribute("data-phase", "reading");
 
     const explanation = page.getByTestId("learn-explanation");
