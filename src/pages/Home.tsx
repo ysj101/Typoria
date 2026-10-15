@@ -45,7 +45,7 @@ export function Home() {
   };
 
   return (
-    <main className="screen-scroll screen-center mx-auto w-full max-w-xl items-center gap-4 px-4 py-4 sm:gap-8 sm:py-10">
+    <main className="screen-scroll screen-center mx-auto w-full max-w-xl items-center gap-3 px-4 py-3 sm:gap-8 sm:py-10">
       <header className="flex max-w-full flex-col items-center gap-1.5 text-center sm:gap-2">
         <h1 className="text-4xl font-bold leading-none tracking-widest sm:text-6xl">Typoria</h1>
         <p className="text-xs font-bold tracking-wider text-perfect">新人エンジニア向け</p>
