@@ -101,3 +101,62 @@ docs/spec.md §14 非機能要件、§15 Phase 4 の確認記録。計測日: 20
 - 実機の macOS Chrome（公開 URL）での効果音・BGM の発音（AudioContext の unlock）と日本語 IME 変換中の入力（AC-14 / AC-16 は合成イベントで自動確認済み）。#62 で確認し、本ファイルに結果を追記する。
 - 実機の iPhone Chrome（公開 URL）でのソフトキーボード入力、効果音・BGM の発音（初回タップでの unlock）、ホーム画面追加からのオフライン起動、エクスポート（「ファイルを保存」経由を含む）。#62 で確認し、本ファイルに結果を追記する。
 - Safari / Edge / Android Chrome / iPad は対象外のため手動確認は行わない。webkit と mobile-chrome の自動テストは回帰検知のために残している（webkit は iPhone Chrome と同じ WebKit ベースのため参考になる）。
+
+## 公開 URL での確認（Issue #62）
+
+公開環境: `https://ysj101.github.io/Typoria/`（GitHub Pages。`main` の `316703c` を deploy ワークフローで配信）。確認日: 2026-10-16。
+
+対象ブラウザは docs/spec.md §14 のとおり macOS Chrome と iPhone Chrome の 2 つ。
+
+| 環境          | 端末・OS・ブラウザ                                     | 状態                                     |
+| ------------- | ------------------------------------------------------ | ---------------------------------------- |
+| macOS Chrome  | Apple Silicon Mac / macOS 27.0.1 / Google Chrome 155.0 | 確認済み（本節）                         |
+| iPhone Chrome | —                                                      | 未実施。実機で確認したら下表の列を埋める |
+
+### 確認方法（macOS Chrome）
+
+- `pnpm test:e2e:public`: `e2e/` の受け入れテストを公開 URL に対して、インストール済みの Google Chrome 安定版（`channel: "chrome"`）で実行する。`page.goto("/...")` はオリジン直下へ解決されるため、`scripts/e2e-public.sh` がサブパス `/Typoria/` を前置したコピー `e2e-public/` を生成してから `playwright.public.config.ts` で実行する。
+- `node scripts/verify-public.mjs`: E2E では観測しにくい AudioContext の unlock、Service Worker の scope、manifest の内容を実 Chrome で確認する。
+- Lighthouse 13.5.0（`lighthouse <URL> --preset=desktop`、headless Chrome 155）。Lighthouse 13 には PWA カテゴリが無いため、インストール可能判定は manifest / Service Worker の確認と Chrome の「インストール」メニューで代替する。
+
+### 受け入れ基準の確認表（公開 URL）
+
+| AC    | 内容                         | macOS Chrome                                       | iPhone Chrome |
+| ----- | ---------------------------- | -------------------------------------------------- | ------------- |
+| AC-01 | PLAY → 3 秒カウントダウン    | OK（acceptance.spec）                              | 未実施        |
+| AC-02 | 90 秒で終了 → Result         | OK（acceptance.spec）                              | 未実施        |
+| AC-03 | 正解で進む / 誤りで進まない  | OK（acceptance.spec）                              | 未実施        |
+| AC-04 | 誤入力後に続行               | OK（acceptance.spec）                              | 未実施        |
+| AC-05 | 全文字入力で次の問題         | OK（acceptance.spec）                              | 未実施        |
+| AC-06 | スコア計算                   | OK（acceptance.spec）                              | 未実施        |
+| AC-07 | スキップでコンボ 0           | OK（acceptance.spec）                              | 未実施        |
+| AC-08 | 10 コンボで FEVER            | OK（acceptance.spec）                              | 未実施        |
+| AC-09 | Result の表示項目            | OK（acceptance.spec + axe）                        | 未実施        |
+| AC-10 | リロード後も記録が残る       | OK（acceptance.spec）                              | 未実施        |
+| AC-11 | 次回難易度の変化             | OK（acceptance.spec）                              | 未実施        |
+| AC-12 | Streak                       | OK（acceptance.spec）                              | 未実施        |
+| AC-13 | ミッション報酬 1 日 1 回     | OK（acceptance.spec）                              | 未実施        |
+| AC-14 | 効果音 OFF で無音            | OK（acceptance.spec）                              | 未実施        |
+| AC-15 | Esc で一時停止・時間停止     | OK（acceptance.spec）                              | 未実施        |
+| AC-16 | IME 変換中に誤判定しない     | OK（acceptance.spec。`isComposing` / keyCode 229） | 未実施        |
+| AC-17 | パーティクル OFF             | OK（acceptance.spec）                              | 未実施        |
+| AC-18 | 演出中に Enter で PLAY AGAIN | OK（acceptance.spec）                              | 未実施        |
+| AC-19 | エクスポート → インポート    | OK（acceptance.spec。不正 JSON の拒否も確認）      | 未実施        |
+| AC-20 | オフラインでプレイ           | OK（pwa.spec。SW 制御下でオフライン再読み込み）    | 未実施        |
+
+公開 URL での E2E は 44 件成功、1 件 skip（mobile-chrome 専用）。学習モード（カテゴリ選択 → 読む → 打つ → クイズ → リザルト、用語帳）と axe（Home / Game / Result / History / Settings / Learn / Glossary）も同じ実行に含まれる。
+
+### 公開環境でのその他の確認（macOS Chrome）
+
+| 項目                        | 結果                                                                                                                                                  |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 効果音・BGM（AudioContext） | PLAY 押下前は AudioContext 未生成。押下後に生成され `state: "running"`、4 秒後の `currentTime` が約 4.0 秒（`scripts/verify-public.mjs`）             |
+| Service Worker              | `activated`、scope `https://ysj101.github.io/Typoria/`                                                                                                |
+| manifest                    | `start_url` / `scope` が `/Typoria/`、`display: standalone`、icons 192 / 512 / 512 maskable                                                           |
+| Lighthouse（Desktop）       | Performance 99 / Accessibility 100 / Best Practices 96 / SEO 100。FCP 0.6s、LCP 0.6s、TBT 0ms、CLS 0                                                  |
+| Best Practices の減点       | `<link rel="icon">` が無く、Chrome が `https://ysj101.github.io/favicon.ico` を要求して 404（コンソールエラー）。本 PR で `index.html` に icon を追加 |
+
+### 残課題
+
+- iPhone Chrome の実機確認（遷移・横持ち、ソフトキーボード、初回タップ後の発音、「ホーム画面に追加」→ 機内モード起動、エクスポート／インポート）は未実施。実施後に上表の列を埋める。
+- Chrome の「インストール」→ スタンドアロン起動は GUI 操作のため自動化していない。manifest と Service Worker の条件は満たしていることを確認済み。
