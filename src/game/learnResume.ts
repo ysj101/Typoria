@@ -1,12 +1,12 @@
 /**
  * 学習モードの中断と復帰（#77）。
- * タブ切り替え・画面ロックの `visibilitychange` で sessionStorage に残し、
- * 戻ったときに同じ用語・同じフェーズから再開する。永続化（IndexedDB）は #76。
+ * 進行状態を sessionStorage に残し、タブ切り替え・画面ロックから戻ったときに
+ * 同じ用語・同じフェーズから再開する。永続化（IndexedDB）は #76。
  */
 import type { Term } from "../types/term";
-import type { LearnQuizState, QuizChoiceIndex } from "./learnQuiz";
-import { createLearnRound, type LearnPhase, type LearnRoundState } from "./learnRound";
-import { createTypingState, inputChar, type TypingState } from "./typing";
+import { isLearnQuizResult, isQuizChoiceIndex, type LearnQuizState } from "./learnQuiz";
+import { LEARN_PHASES, type LearnPhase, type LearnRoundState } from "./learnRound";
+import { createTypingState, type TypingState } from "./typing";
 
 export const LEARN_RESUME_STORAGE_KEY = "typoria.learn.resume";
 
@@ -46,20 +46,18 @@ export function emphasizeTermName(
   text: string,
   name: string,
 ): Array<{ text: string; term: boolean }> {
-  if (name.length === 0 || !text.includes(name)) return [{ text, term: false }];
-  const parts: Array<{ text: string; term: boolean }> = [];
-  let rest = text;
-  while (rest.length > 0) {
-    const index = rest.indexOf(name);
-    if (index === -1) {
-      parts.push({ text: rest, term: false });
-      break;
-    }
-    if (index > 0) parts.push({ text: rest.slice(0, index), term: false });
-    parts.push({ text: name, term: true });
-    rest = rest.slice(index + name.length);
-  }
-  return parts;
+  if (name.length === 0) return [{ text, term: false }];
+  return text
+    .split(name)
+    .flatMap((chunk, index) =>
+      index === 0
+        ? [{ text: chunk, term: false }]
+        : [
+            { text: name, term: true },
+            { text: chunk, term: false },
+          ],
+    )
+    .filter((part) => part.text.length > 0);
 }
 
 function storage(): Storage | null {
@@ -70,12 +68,8 @@ function storage(): Storage | null {
   }
 }
 
-function isQuizChoiceIndex(value: unknown): value is QuizChoiceIndex {
-  return value === 0 || value === 1 || value === 2 || value === 3;
-}
-
 function isLearnPhase(value: unknown): value is LearnPhase {
-  return value === "reading" || value === "typing" || value === "roundEnd";
+  return (LEARN_PHASES as readonly unknown[]).includes(value);
 }
 
 function isLearnQuizState(value: unknown): value is LearnQuizState {
@@ -101,14 +95,10 @@ function isLearnQuizState(value: unknown): value is LearnQuizState {
     if (!isQuizChoiceIndex(item.sourceIndex) || typeof item.text !== "string") return false;
   }
   if (v.phase === "asking") return v.selectedSourceIndex === null && v.result === null;
-  if (!isQuizChoiceIndex(v.selectedSourceIndex)) return false;
-  if (!v.result || typeof v.result !== "object") return false;
-  const result = v.result as Record<string, unknown>;
   return (
-    result.termId === question.termId &&
-    typeof result.correct === "boolean" &&
-    typeof result.answeredAt === "string" &&
-    result.answeredAt.length > 0
+    isQuizChoiceIndex(v.selectedSourceIndex) &&
+    isLearnQuizResult(v.result) &&
+    v.result.termId === question.termId
   );
 }
 
@@ -164,14 +154,14 @@ export function clearLearnResume(): void {
   storage()?.removeItem(LEARN_RESUME_STORAGE_KEY);
 }
 
+/** 途中まで正しく打った状態。誤入力の履歴は残さない */
 function typingWithCursor(answer: string, cursor: number): TypingState {
-  let state = createTypingState(answer);
-  for (const ch of answer.slice(0, cursor)) {
-    const next = inputChar(state, ch);
-    if (next.result !== "correct") return createTypingState(answer);
-    state = next.state;
-  }
-  return state;
+  return {
+    ...createTypingState(answer),
+    cursor,
+    correctKeystrokes: cursor,
+    lastInput: cursor > 0 ? "correct" : null,
+  };
 }
 
 /**
@@ -190,39 +180,23 @@ export function restoreLearnSession(
     terms.push(term);
   }
 
-  if (snapshot.phase === "roundEnd") {
-    if (snapshot.index !== terms.length) return null;
-    if (snapshot.quiz && !terms.some((term) => term.id === snapshot.quiz?.question.termId)) {
+  const { phase, index } = snapshot;
+  const term = terms[index];
+  if (phase === "roundEnd") {
+    if (index !== terms.length) return null;
+    if (snapshot.quiz && !terms.some((item) => item.id === snapshot.quiz?.question.termId)) {
       return null;
     }
-    const round = createLearnRound(terms);
-    return {
-      round: { ...round, phase: "roundEnd", index: terms.length, typing: null },
-      quiz: snapshot.quiz,
-    };
+  } else if (!term) {
+    return null;
+  } else if (phase === "typing" && snapshot.cursor >= term.typingText.length) {
+    return null;
   }
 
-  if (snapshot.index >= terms.length) return null;
-  const term = terms[snapshot.index];
-  if (!term) return null;
-
-  if (snapshot.phase === "reading") {
-    const round = createLearnRound(terms);
-    return {
-      round: { ...round, phase: "reading", index: snapshot.index, typing: null },
-      quiz: null,
-    };
-  }
-
-  if (snapshot.cursor >= term.typingText.length) return null;
-  const round = createLearnRound(terms);
+  const typing =
+    phase === "typing" && term ? typingWithCursor(term.typingText, snapshot.cursor) : null;
   return {
-    round: {
-      ...round,
-      phase: "typing",
-      index: snapshot.index,
-      typing: typingWithCursor(term.typingText, snapshot.cursor),
-    },
-    quiz: null,
+    round: { phase, terms, index, typing },
+    quiz: phase === "roundEnd" ? snapshot.quiz : null,
   };
 }

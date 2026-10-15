@@ -1,10 +1,7 @@
-import { useLayoutEffect } from "react";
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { BackgroundProvider } from "../app/BackgroundContext";
-import { useBackgroundControl } from "../app/useBackgroundControl";
 import { LEARN_RESUME_STORAGE_KEY } from "../game/learnResume";
 import { Result } from "./Result";
 import { Learn } from "./Learn";
@@ -62,30 +59,12 @@ async function finishRound() {
 
 const QUIZ_NOW = () => new Date("2026-10-14T09:00:00.000Z");
 
-function hidePage() {
-  vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
-  fireEvent(document, new Event("visibilitychange"));
-}
-
 async function leaveAndReturn(router: ReturnType<typeof renderLearn>) {
   vi.restoreAllMocks();
   await act(async () => {
     await router.navigate("/");
     await router.navigate("/learn");
   });
-}
-
-function FeverHarness() {
-  const { background, setBackground } = useBackgroundControl();
-  useLayoutEffect(() => {
-    setBackground({ mode: "fever", intensity: 1 });
-  }, [setBackground]);
-  return (
-    <>
-      <span data-testid="bg-mode">{background.mode}</span>
-      <Learn terms={TERMS} />
-    </>
-  );
 }
 
 describe("Learn page", () => {
@@ -270,7 +249,7 @@ describe("Learn page", () => {
     await userEvent.click(screen.getByRole("button", { name: "打つ" }));
     const explanation = screen.getByTestId("learn-explanation");
     expect(screen.getByTestId("learn")).toHaveAttribute("data-phase", "typing");
-    expect(screen.getByTestId("learn")).toHaveAttribute("data-explanation", "collapsed");
+    expect(screen.getByTestId("learn-explanation")).toHaveAttribute("data-collapsed", "true");
     expect(explanation).toHaveAttribute("data-collapsed", "true");
     expect(explanation).toHaveTextContent("機械学習の解説。");
     expect(explanation).not.toHaveTextContent("画面の上に残る");
@@ -316,7 +295,6 @@ describe("Learn page", () => {
     expect(screen.getByTestId("learn-name")).toHaveTextContent("SaaS");
     expect(screen.getByTestId("learn")).toHaveAttribute("data-phase", "typing");
 
-    hidePage();
     await leaveAndReturn(router);
 
     expect(screen.getByTestId("learn")).toHaveAttribute("data-phase", "typing");
@@ -335,7 +313,6 @@ describe("Learn page", () => {
     await userEvent.click(screen.getAllByTestId("learn-quiz-choice")[3]!);
     expect(screen.getByTestId("learn-quiz-feedback")).toHaveAttribute("data-correct", "true");
 
-    hidePage();
     await leaveAndReturn(router);
 
     expect(screen.getByTestId("learn")).toHaveAttribute("data-phase", "quiz");
@@ -349,7 +326,6 @@ describe("Learn page", () => {
     const router = renderLearn();
     await userEvent.click(screen.getByRole("button", { name: "打つ" }));
     typeOnLearn("c");
-    hidePage();
     expect(sessionStorage.getItem(LEARN_RESUME_STORAGE_KEY)).not.toBeNull();
 
     vi.restoreAllMocks();
@@ -376,29 +352,9 @@ describe("Learn page", () => {
     );
     renderLearn();
     const learn = screen.getByTestId("learn");
-    expect(learn).toHaveAttribute("data-reduced-motion", "true");
-    expect(learn).toHaveAttribute("data-shake", "none");
-    expect(learn).toHaveAttribute("data-fx", "calm");
-
     await userEvent.click(screen.getByRole("button", { name: "打つ" }));
     fireEvent.keyDown(learn, { key: "x" });
-    expect(learn).toHaveAttribute("data-shake", "none");
+    expect(learn).not.toHaveAttribute("data-shake");
     expect(screen.getByTestId("learn-answer")).toHaveAttribute("data-last-input", "incorrect");
-  });
-
-  it("calms the background instead of keeping 90-second effects", async () => {
-    const router = createMemoryRouter([{ path: "/learn", element: <FeverHarness /> }], {
-      initialEntries: ["/learn"],
-    });
-    render(
-      <BackgroundProvider>
-        <RouterProvider router={router} />
-      </BackgroundProvider>,
-    );
-    await waitFor(() => {
-      expect(screen.getByTestId("bg-mode")).toHaveTextContent("normal");
-    });
-    expect(screen.getByTestId("learn")).toHaveAttribute("data-fx", "calm");
-    expect(screen.getByTestId("learn")).toHaveAttribute("data-shake", "none");
   });
 });

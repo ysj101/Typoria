@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import type React from "react";
-import { useBackgroundControl } from "../app/useBackgroundControl";
 import { useAppNavigate } from "../app/navigation";
 import { selectTerms, TERMS } from "../data/terms";
 import { LearnQuizView } from "../components/LearnQuizView";
@@ -32,7 +31,6 @@ import {
 } from "../game/learnRound";
 import type { TypingState } from "../game/typing";
 import { isKeyboardChromeTarget, useKeyboard } from "../hooks/useKeyboard";
-import { useReducedMotion } from "../hooks/useReducedMotion";
 import { useVisualViewport } from "../hooks/useVisualViewport";
 import { TERM_CATEGORY_LABELS, type Term } from "../types/term";
 import "./Learn.css";
@@ -66,8 +64,6 @@ function createInitialSession(terms: readonly Term[] | undefined): LearnResumeSe
 export function Learn({ terms, rng, now }: LearnProps) {
   const nav = useAppNavigate();
   const { compact, inset } = useVisualViewport();
-  const reducedMotion = useReducedMotion();
-  const { setBackground } = useBackgroundControl();
   const [initial] = useState(() => createInitialSession(terms));
   const [round, setRound] = useState<LearnRoundState>(initial.round);
   const [quiz, setQuiz] = useState<LearnQuizState | null>(initial.quiz);
@@ -76,12 +72,6 @@ export function Learn({ terms, rng, now }: LearnProps) {
   const beginButtonRef = useRef<HTMLButtonElement>(null);
   const quizButtonRef = useRef<HTMLButtonElement>(null);
   const answerRef = useRef<HTMLParagraphElement>(null);
-  const roundRef = useRef(round);
-  const quizRef = useRef(quiz);
-  useLayoutEffect(() => {
-    roundRef.current = round;
-    quizRef.current = quiz;
-  });
 
   const focusTypingInput = useCallback(() => {
     typingInputRef.current?.focus({ preventScroll: true });
@@ -104,21 +94,10 @@ export function Learn({ terms, rng, now }: LearnProps) {
     textInput: typingInputRef,
   });
 
-  // 90 秒モードの画面シェイクや FEVER 背景は使わない
+  // 進行状態を常に残し、タブ切り替え・画面ロック・戻る操作のどれからでも同じ所へ戻す
   useEffect(() => {
-    setBackground({ mode: "normal", intensity: 0 });
-    return () => setBackground({ mode: "normal", intensity: 0 });
-  }, [setBackground]);
-
-  // 非表示になった瞬間の用語とフェーズを残す（タブ切り替え・画面ロック）
-  useEffect(() => {
-    const persist = () => {
-      if (document.visibilityState !== "hidden") return;
-      saveLearnResume(captureLearnResume(roundRef.current, quizRef.current));
-    };
-    document.addEventListener("visibilitychange", persist);
-    return () => document.removeEventListener("visibilitychange", persist);
-  }, []);
+    saveLearnResume(captureLearnResume(round, quiz));
+  }, [round, quiz]);
 
   useEffect(() => {
     if (round.phase === "typing") return;
@@ -134,18 +113,18 @@ export function Learn({ terms, rng, now }: LearnProps) {
     if (round.phase === "typing") focusTypingInput();
   }, [quiz, round.phase, round.index, focusTypingInput]);
 
-  useEffect(() => {
-    if (round.phase !== "typing") return;
-    const node = answerRef.current;
-    if (!node || typeof node.scrollIntoView !== "function") return;
-    node.scrollIntoView({ block: "nearest", inline: "nearest" });
-  }, [round.phase, round.index, compact, inset]);
-
   const typing = round.phase === "typing";
   const collapsed = shouldCollapseLearnExplanation(round.phase, {
     short: compact,
     keyboardInset: inset,
   });
+
+  useEffect(() => {
+    if (!typing) return;
+    const node = answerRef.current;
+    if (!node || typeof node.scrollIntoView !== "function") return;
+    node.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [typing, round.index, collapsed]);
   const keepSoftKeyboard = useCallback(
     (event: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>) => {
       if (!typing || isKeyboardChromeTarget(event.target)) return;
@@ -186,10 +165,6 @@ export function Learn({ terms, rng, now }: LearnProps) {
       data-testid="learn"
       data-phase={phase}
       data-compact={compact ? "true" : "false"}
-      data-explanation={term && !quiz ? (collapsed ? "collapsed" : "full") : undefined}
-      data-shake="none"
-      data-fx="calm"
-      data-reduced-motion={reducedMotion ? "true" : "false"}
       data-term-id={term?.id ?? ""}
       onMouseDown={keepSoftKeyboard}
       onTouchStart={keepSoftKeyboard}
@@ -245,7 +220,7 @@ export function Learn({ terms, rng, now }: LearnProps) {
               ref={beginButtonRef}
               type="button"
               onClick={onBeginTyping}
-              className="learn-tap rounded-full bg-perfect px-12 py-3 text-xl font-bold text-bg focus-visible:ring-4 focus-visible:ring-fever"
+              className="rounded-full bg-perfect px-12 py-3 text-xl font-bold text-bg focus-visible:ring-4 focus-visible:ring-fever"
             >
               打つ
             </button>
@@ -270,7 +245,7 @@ export function Learn({ terms, rng, now }: LearnProps) {
                 focusTypingInput();
               }}
               onClick={focusTypingInput}
-              className="learn-tap rounded-full border border-subtext px-4 py-2 hover:border-text hover:text-text"
+              className="rounded-full border border-subtext px-4 py-2 hover:border-text hover:text-text"
             >
               キーボードを開く
             </button>
@@ -281,7 +256,13 @@ export function Learn({ terms, rng, now }: LearnProps) {
   );
 }
 
-function LearnExplanation({ term, collapsed }: { term: Term; collapsed: boolean }) {
+const LearnExplanation = memo(function LearnExplanation({
+  term,
+  collapsed,
+}: {
+  term: Term;
+  collapsed: boolean;
+}) {
   const text = collapsed ? termSummary(term.explanation) : term.explanation;
   const parts = emphasizeTermName(text, term.name);
   return (
@@ -303,7 +284,7 @@ function LearnExplanation({ term, collapsed }: { term: Term; collapsed: boolean 
       )}
     </p>
   );
-}
+});
 
 function LearnAnswer({
   typing,
