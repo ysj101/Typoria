@@ -383,7 +383,7 @@ interface UserProgress {
 - アクセシビリティ: キーボードのみで操作可能、WCAG AA コントラスト、`aria-live` で結果を通知、reduced-motion 対応。
 - レスポンシブ: モバイル幅で横スクロールなしに閲覧可能。
 - パフォーマンス: 60fps、入力 → 描画 1 フレーム以内、問題切り替え 150ms 以内。
-- 対応ブラウザ: Chrome / Edge / Safari 現行安定版。
+- 対応ブラウザ: macOS Chrome 現行安定版のみ（Windows Chrome / Android Chrome / iOS Chrome / Safari / Edge / Firefox は対象外。これらでの動作確認は行わない）。
 
 ## 15. 開発フェーズ
 

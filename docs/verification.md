@@ -2,6 +2,8 @@
 
 docs/spec.md §14 非機能要件、§15 Phase 4 の確認記録。計測日: 2026-10-13。
 
+> **対象ブラウザ（2026-10-16 更新）**: サポート対象は **macOS Chrome 現行安定版のみ**。以下の Safari（webkit）・Edge・Mobile Chrome の列と項目は、対象を絞る前に行った自動テストの記録として残しているが、サポート対象ではなく、実機での手動確認も行わない。公開 URL での実機確認（#62）は macOS Chrome だけを対象にする。
+
 ## 検証方法
 
 | 対象          | 方法                                                                                         |
@@ -96,6 +98,5 @@ docs/spec.md §14 非機能要件、§15 Phase 4 の確認記録。計測日: 20
 
 ## 残課題（要手動確認）
 
-- 実機 Safari（macOS / iOS）での効果音・BGM の発音（AudioContext の unlock）と日本語 IME 変換中の入力（AC-14 / AC-16 は合成イベントで自動確認済み）。
-- 実機 Edge での動作（Chromium ベースのため問題は想定していない）。
-- CI の e2e は chromium と mobile-chrome。webkit は `pnpm test:e2e:all` をローカルで実行する。
+- 実機の macOS Chrome（公開 URL）での効果音・BGM の発音（AudioContext の unlock）と日本語 IME 変換中の入力（AC-14 / AC-16 は合成イベントで自動確認済み）。#62 で確認し、本ファイルに結果を追記する。
+- Safari / Edge / Mobile Chrome は対象外のため手動確認は行わない。webkit と mobile-chrome の自動テストは回帰検知のために残しているが、失敗してもサポート要件には影響しない。
