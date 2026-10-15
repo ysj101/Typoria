@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Term, TermCategory } from "../types/term";
+import { makeTerm } from "../test/factories";
 import {
   LEARN_NEXT_PHASE,
   LEARN_PHASES,
@@ -10,23 +10,7 @@ import {
   requestQuiz,
 } from "./learnRound";
 
-function term(id: string, typingText: string, name = id): Term {
-  const category = id.slice(0, id.lastIndexOf("-")) as TermCategory;
-  return {
-    id,
-    category,
-    level: 1,
-    name,
-    explanation: `${name}の解説`,
-    typingText,
-    quiz: {
-      question: "質問",
-      choices: ["A", "B", "C", "D"],
-      answerIndex: 0,
-      explanation: "解説",
-    },
-  };
-}
+const term = (id: string, typingText: string, name = id) => makeTerm(id, { typingText, name });
 
 const ROUND = [
   term("ai-001", "cat", "機械学習"),

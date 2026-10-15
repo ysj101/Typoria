@@ -3,25 +3,10 @@ import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { afterEach, describe, expect, it } from "vitest";
 import { Learn } from "./Learn";
-import type { Term, TermCategory } from "../types/term";
+import { makeTerm } from "../test/factories";
+import type { Term } from "../types/term";
 
-function term(id: string, typingText: string, name: string): Term {
-  const category = id.slice(0, id.lastIndexOf("-")) as TermCategory;
-  return {
-    id,
-    category,
-    level: 1,
-    name,
-    explanation: `${name}の解説。画面の上に残る文章です。`,
-    typingText,
-    quiz: {
-      question: "質問",
-      choices: ["A", "B", "C", "D"],
-      answerIndex: 0,
-      explanation: "解説",
-    },
-  };
-}
+const term = (id: string, typingText: string, name: string) => makeTerm(id, { typingText, name });
 
 const TERMS = [
   term("ai-001", "cat", "機械学習"),

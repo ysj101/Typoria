@@ -12,7 +12,7 @@ import {
   type LearnRoundState,
 } from "../game/learnRound";
 import type { TypingState } from "../game/typing";
-import { useKeyboard } from "../hooks/useKeyboard";
+import { isKeyboardChromeTarget, useKeyboard } from "../hooks/useKeyboard";
 import { useVisualViewport } from "../hooks/useVisualViewport";
 import { TERM_CATEGORY_LABELS, type Term } from "../types/term";
 import "./Learn.css";
@@ -20,14 +20,6 @@ import "./Learn.css";
 export interface LearnProps {
   /** 未指定なら全カテゴリから既定の 3 語 */
   terms?: readonly Term[];
-}
-
-/** ボタン上のタップでは、ソフトキーボード用 input へフォーカスを移さない */
-function isKeyboardChromeTarget(target: EventTarget | null): boolean {
-  return (
-    target instanceof Element &&
-    Boolean(target.closest("button, a, textarea, select, [role='dialog']"))
-  );
 }
 
 /**
@@ -38,7 +30,9 @@ function isKeyboardChromeTarget(target: EventTarget | null): boolean {
 export function Learn({ terms }: LearnProps) {
   const nav = useAppNavigate();
   const { compact } = useVisualViewport();
-  const [round, setRound] = useState<LearnRoundState>(() => createInitialRound(terms));
+  const [round, setRound] = useState<LearnRoundState>(() =>
+    createLearnRound(terms ?? selectTerms()),
+  );
   const [quiz, setQuiz] = useState<LearnQuizTransition | null>(null);
   const containerRef = useRef<HTMLElement>(null);
   const typingInputRef = useRef<HTMLInputElement>(null);
@@ -160,7 +154,6 @@ export function Learn({ terms }: LearnProps) {
               ref={beginButtonRef}
               type="button"
               onClick={onBeginTyping}
-              onTouchEnd={onBeginTyping}
               className="rounded-full bg-perfect px-12 py-3 text-xl font-bold text-bg focus-visible:ring-4 focus-visible:ring-fever"
             >
               打つ
@@ -173,7 +166,7 @@ export function Learn({ terms }: LearnProps) {
               quiz={quiz}
               quizButtonRef={quizButtonRef}
               onQuiz={onQuiz}
-              onHome={() => nav.toHome()}
+              onHome={nav.toHome}
             />
           )}
         </div>
@@ -197,7 +190,7 @@ export function Learn({ terms }: LearnProps) {
             )}
             <button
               type="button"
-              onClick={() => nav.toHome()}
+              onClick={nav.toHome}
               className="rounded-full border border-subtext px-4 py-2 hover:border-text hover:text-text"
             >
               やめる
@@ -207,10 +200,6 @@ export function Learn({ terms }: LearnProps) {
       </div>
     </section>
   );
-}
-
-function createInitialRound(terms: readonly Term[] | undefined): LearnRoundState {
-  return createLearnRound(terms ?? selectTerms());
 }
 
 function LearnAnswer({ typing }: { typing: TypingState }) {

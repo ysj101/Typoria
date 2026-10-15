@@ -43,9 +43,6 @@ export function Home() {
     unlockAudio();
     nav.toGame();
   };
-  const onLearn = () => {
-    nav.toLearn();
-  };
 
   return (
     <main className="screen-scroll screen-center mx-auto w-full max-w-xl items-center gap-4 px-4 py-4 sm:gap-8 sm:py-10">

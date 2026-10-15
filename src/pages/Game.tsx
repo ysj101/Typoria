@@ -16,7 +16,7 @@ import { getSharedAudioEngine } from "../hooks/useAudio";
 import { useGame, type UseGameOptions } from "../hooks/useGame";
 import { useGameAudio } from "../hooks/useGameAudio";
 import { useGameFx } from "../hooks/useGameFx";
-import { useKeyboard } from "../hooks/useKeyboard";
+import { isKeyboardChromeTarget, useKeyboard } from "../hooks/useKeyboard";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 import { useVisualViewport } from "../hooks/useVisualViewport";
 import { db } from "../storage";
@@ -24,14 +24,6 @@ import type { Difficulty, Question, QuestionStat } from "../types/game";
 
 /** 画面遷移のアニメーション時間（docs/spec.md §9.1） */
 const RESULT_TRANSITION_MS = 400;
-
-/** ボタンやダイアログ上のタップでは、ソフトキーボード用 input へフォーカスを移さない */
-function isKeyboardChromeTarget(target: EventTarget | null): boolean {
-  return (
-    target instanceof Element &&
-    Boolean(target.closest("button, a, textarea, select, [role='dialog']"))
-  );
-}
 
 export type GameDatabase = SessionDatabase & { getQuestionStats(): Promise<QuestionStat[]> };
 

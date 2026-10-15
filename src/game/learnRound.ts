@@ -106,30 +106,17 @@ export function inputLearnChar(state: LearnRoundState, char: string): LearnInput
   }
 
   const nextIndex = state.index + 1;
-  if (nextIndex < state.terms.length) {
-    return {
-      state: {
-        phase: "reading",
-        terms: state.terms,
-        index: nextIndex,
-        typing: null,
-      },
-      result: "completed",
-      termCompleted: true,
-      roundCompleted: false,
-    };
-  }
-
+  const roundCompleted = nextIndex >= state.terms.length;
   return {
     state: {
-      phase: "roundEnd",
-      terms: state.terms,
-      index: state.terms.length,
+      ...state,
+      phase: roundCompleted ? "roundEnd" : "reading",
+      index: nextIndex,
       typing: null,
     },
     result: "completed",
     termCompleted: true,
-    roundCompleted: true,
+    roundCompleted,
   };
 }
 
