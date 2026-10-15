@@ -1,7 +1,7 @@
 /**
  * 学習ラウンドの状態遷移（読む → 打つ → ラウンド終了）。
  * React 非依存。打鍵判定は `typing.ts` に委譲する。
- * ラウンド終了後の理解度クイズ（#75）へは `requestQuiz` で渡す。
+ * ラウンド終了後の理解度クイズへは `requestQuiz` で渡す。
  */
 import type { Term } from "../types/term";
 import { createTypingState, inputChar, type InputResult, type TypingState } from "./typing";
@@ -11,7 +11,7 @@ export const LEARN_PHASES = ["reading", "typing", "roundEnd"] as const;
 
 export type LearnPhase = (typeof LEARN_PHASES)[number];
 
-/** #75 が実装する、ラウンド終了の次フェーズ */
+/** ラウンド終了の次フェーズ（理解度クイズ） */
 export const LEARN_NEXT_PHASE = "quiz" as const;
 
 export type LearnNextPhase = typeof LEARN_NEXT_PHASE;
@@ -38,7 +38,7 @@ export interface LearnInputOutcome {
   roundCompleted: boolean;
 }
 
-/** #75 のクイズへ渡す、このラウンドで扱った用語 */
+/** 理解度クイズへ渡す、このラウンドで扱った用語 */
 export interface LearnQuizHandoff {
   terms: readonly Term[];
 }
@@ -121,7 +121,7 @@ export function inputLearnChar(state: LearnRoundState, char: string): LearnInput
 }
 
 /**
- * ラウンド終了後に #75 の理解度クイズへ進むためのフック。
+ * ラウンド終了後に理解度クイズへ進む。
  * 終了前は null。用語は出題順のまま渡す。
  */
 export function requestQuiz(state: LearnRoundState): LearnQuizTransition | null {

@@ -1,8 +1,13 @@
 import { expect, test } from "@playwright/test";
-import { typeChars } from "./helpers";
+import {
+  expectNoHorizontalScroll,
+  expectNoSeriousViolations,
+  typeChars,
+  usesSoftKeyboard,
+} from "./helpers";
 
 test.describe("learn round", () => {
-  test("reads and types three terms, then ends the round", async ({ page }) => {
+  test("reads, types, quizzes, and shows the learn result", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("button", { name: "PLAY" })).toBeVisible();
     await page.getByRole("button", { name: "IT用語を学ぶ" }).click();
@@ -40,11 +45,57 @@ test.describe("learn round", () => {
     }
 
     await page.getByRole("button", { name: "理解度クイズへ" }).click();
-    const placeholder = page.getByTestId("learn-quiz-placeholder");
-    await expect(placeholder).toHaveAttribute("data-next-phase", "quiz");
-    await expect(placeholder).toContainText("理解度クイズは次の更新で始まります。");
+    const learn = page.getByTestId("learn");
+    await expect(learn).toHaveAttribute("data-phase", "quiz");
+    const choices = page.getByTestId("learn-quiz-choice");
+    await expect(choices).toHaveCount(4);
+    const choiceTexts = (await choices.allTextContents()).map((text) => text.trim());
+    const boxes = await choices.evaluateAll((els) =>
+      els.map((el) => {
+        const box = el.getBoundingClientRect();
+        return { height: box.height, width: box.width };
+      }),
+    );
+    for (const box of boxes) {
+      expect(box.height).toBeGreaterThanOrEqual(44);
+      expect(box.width).toBeGreaterThanOrEqual(44);
+    }
+    await expectNoHorizontalScroll(page);
+    await expectNoSeriousViolations(page, "Learn quiz");
 
-    await page.getByRole("button", { name: "ホームへ戻る" }).click();
+    if (usesSoftKeyboard()) {
+      await choices.first().click();
+    } else {
+      await expect(choices.first()).toBeFocused();
+      await page.keyboard.press("Enter");
+    }
+
+    const feedback = page.getByTestId("learn-quiz-feedback");
+    await expect(feedback).toBeVisible();
+    const judgment = ((await page.getByTestId("learn-quiz-judgment").textContent()) ?? "").trim();
+    expect(judgment).toMatch(/^(正解|不正解)$/);
+    const correctText = (
+      (await page.getByTestId("learn-quiz-correct-answer").textContent()) ?? ""
+    ).trim();
+    expect(correctText.length).toBeGreaterThan(0);
+    expect(choiceTexts).toContain(correctText);
+    const explanation = (
+      (await page.getByTestId("learn-quiz-explanation").textContent()) ?? ""
+    ).trim();
+    expect(explanation.length).toBeGreaterThan(0);
+    await expectNoSeriousViolations(page, "Learn quiz feedback");
+
+    await page.getByRole("button", { name: "結果へ" }).click();
+    await expect(page).toHaveURL(/#\/result$/);
+    await expect(page.getByRole("heading", { name: "今日学んだ用語" })).toBeVisible();
+    for (const name of names) {
+      await expect(page.getByTestId("learn-result")).toContainText(name);
+    }
+    await expect(page.getByTestId("learn-result-quiz")).toContainText(judgment);
+    await expectNoHorizontalScroll(page);
+    await expectNoSeriousViolations(page, "Learn result");
+
+    await page.getByRole("button", { name: "ホームへ" }).click();
     await expect(page).toHaveURL(/#\/$/);
     await expect(page.getByRole("button", { name: "PLAY" })).toBeVisible();
   });
