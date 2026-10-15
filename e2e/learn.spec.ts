@@ -146,5 +146,63 @@ test.describe("learn round", () => {
       expect(box.top).toBeGreaterThanOrEqual(boxes.top - 1);
       expect(box.bottom).toBeLessThanOrEqual(boxes.bottom + 1);
     }
+    await expect(page.getByTestId("learn-explanation")).toHaveAttribute("data-collapsed", "true");
+    await expect(page.getByTestId("learn-progress")).toBeInViewport();
+    await expect(page.getByRole("button", { name: "やめる" })).toBeInViewport();
+    await expectNoHorizontalScroll(page);
+  });
+
+  test("mobile-chrome keeps the typing target on screen without horizontal scroll", async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "mobile-chrome", "mobile-chrome のみ");
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/");
+    await page.getByRole("button", { name: "IT用語を学ぶ" }).click();
+    await expect(page.getByTestId("learn")).toHaveAttribute("data-phase", "reading");
+
+    const explanation = page.getByTestId("learn-explanation");
+    await expect(explanation).toHaveAttribute("data-collapsed", "false");
+    const typography = await explanation.evaluate((el) => {
+      const style = getComputedStyle(el);
+      const fontSize = parseFloat(style.fontSize);
+      const lineHeight = style.lineHeight.endsWith("px")
+        ? parseFloat(style.lineHeight) / fontSize
+        : parseFloat(style.lineHeight);
+      return { fontSize, lineHeight, color: style.color };
+    });
+    expect(typography.fontSize).toBeGreaterThanOrEqual(16);
+    expect(typography.lineHeight).toBeGreaterThanOrEqual(1.65);
+    expect(typography.lineHeight).toBeLessThanOrEqual(1.75);
+
+    const termName = (await page.getByTestId("learn-name").textContent()) ?? "";
+    expect(termName.length).toBeGreaterThan(0);
+    await expect(explanation.locator("strong").first()).toHaveText(termName);
+    await expectNoSeriousViolations(page, "Learn reading");
+    await expectNoHorizontalScroll(page);
+
+    for (const label of ["打つ", "やめる"]) {
+      const box = await page.getByRole("button", { name: label }).boundingBox();
+      expect(box).not.toBeNull();
+      expect(box!.width).toBeGreaterThanOrEqual(44);
+      expect(box!.height).toBeGreaterThanOrEqual(44);
+    }
+
+    await page.getByRole("button", { name: "打つ" }).click();
+    await expect(page.getByTestId("learn")).toHaveAttribute("data-phase", "typing");
+    await expect(page.getByTestId("learn-answer")).toBeInViewport();
+    await expect(page.getByTestId("learn-progress")).toBeInViewport();
+    await expect(page.getByRole("button", { name: "やめる" })).toBeInViewport();
+    await expectNoHorizontalScroll(page);
+
+    await page.setViewportSize({ width: 390, height: 320 });
+    await expect(page.getByTestId("learn")).toHaveAttribute("data-compact", "true");
+    await expect(explanation).toHaveAttribute("data-collapsed", "true");
+    await expect(page.getByTestId("learn-answer")).toBeInViewport();
+    await expect(page.getByTestId("learn-progress")).toBeInViewport();
+    await expect(page.getByRole("button", { name: "やめる" })).toBeInViewport();
+    await expectNoHorizontalScroll(page);
+    await expectNoSeriousViolations(page, "Learn typing keyboard");
   });
 });

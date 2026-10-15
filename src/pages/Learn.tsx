@@ -1,15 +1,26 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import type React from "react";
 import { useAppNavigate } from "../app/navigation";
-import { selectTerms } from "../data/terms";
+import { selectTerms, TERMS } from "../data/terms";
 import { LearnQuizView } from "../components/LearnQuizView";
 import {
   answerLearnQuiz,
   createLearnQuiz,
   createLearnRoundResult,
+  termSummary,
   type LearnQuizState,
   type QuizChoiceIndex,
 } from "../game/learnQuiz";
+import {
+  captureLearnResume,
+  clearLearnResume,
+  emphasizeTermName,
+  loadLearnResume,
+  restoreLearnSession,
+  saveLearnResume,
+  shouldCollapseLearnExplanation,
+  type LearnResumeSession,
+} from "../game/learnResume";
 import {
   beginTyping,
   createLearnRound,
@@ -33,22 +44,34 @@ export interface LearnProps {
   now?: () => Date;
 }
 
+function createInitialSession(terms: readonly Term[] | undefined): LearnResumeSession {
+  const catalog = terms ?? TERMS;
+  const saved = loadLearnResume();
+  if (saved) {
+    const restored = restoreLearnSession(saved, catalog);
+    if (restored) return restored;
+    clearLearnResume();
+  }
+  return { round: createLearnRound(terms ?? selectTerms()), quiz: null };
+}
+
 /**
- * 学習モード（#74）。
+ * 学習モード（#74 / #75 / #77）。
  * 1 ラウンドは「解説を読む → typingText を打つ」を既定 3 語くり返し、
  * ラウンド終了後に理解度クイズへ進む。
+ * タブの切り替えや画面ロックでは、同じ用語・同じフェーズから再開する。
  */
 export function Learn({ terms, rng, now }: LearnProps) {
   const nav = useAppNavigate();
-  const { compact } = useVisualViewport();
-  const [round, setRound] = useState<LearnRoundState>(() =>
-    createLearnRound(terms ?? selectTerms()),
-  );
-  const [quiz, setQuiz] = useState<LearnQuizState | null>(null);
+  const { compact, inset } = useVisualViewport();
+  const [initial] = useState(() => createInitialSession(terms));
+  const [round, setRound] = useState<LearnRoundState>(initial.round);
+  const [quiz, setQuiz] = useState<LearnQuizState | null>(initial.quiz);
   const containerRef = useRef<HTMLElement>(null);
   const typingInputRef = useRef<HTMLInputElement>(null);
   const beginButtonRef = useRef<HTMLButtonElement>(null);
   const quizButtonRef = useRef<HTMLButtonElement>(null);
+  const answerRef = useRef<HTMLParagraphElement>(null);
 
   const focusTypingInput = useCallback(() => {
     typingInputRef.current?.focus({ preventScroll: true });
@@ -71,6 +94,11 @@ export function Learn({ terms, rng, now }: LearnProps) {
     textInput: typingInputRef,
   });
 
+  // 進行状態を常に残し、タブ切り替え・画面ロック・戻る操作のどれからでも同じ所へ戻す
+  useEffect(() => {
+    saveLearnResume(captureLearnResume(round, quiz));
+  }, [round, quiz]);
+
   useEffect(() => {
     if (round.phase === "typing") return;
     if (document.activeElement === typingInputRef.current) {
@@ -82,20 +110,38 @@ export function Learn({ terms, rng, now }: LearnProps) {
     if (quiz) return;
     if (round.phase === "reading") beginButtonRef.current?.focus();
     if (round.phase === "roundEnd") quizButtonRef.current?.focus();
-  }, [quiz, round.phase, round.index]);
+    if (round.phase === "typing") focusTypingInput();
+  }, [quiz, round.phase, round.index, focusTypingInput]);
 
-  const keyboardOpen = round.phase === "typing";
+  const typing = round.phase === "typing";
+  const collapsed = shouldCollapseLearnExplanation(round.phase, {
+    short: compact,
+    keyboardInset: inset,
+  });
+
+  useEffect(() => {
+    if (!typing) return;
+    const node = answerRef.current;
+    if (!node || typeof node.scrollIntoView !== "function") return;
+    node.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [typing, round.index, collapsed]);
   const keepSoftKeyboard = useCallback(
     (event: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>) => {
-      if (!keyboardOpen || isKeyboardChromeTarget(event.target)) return;
+      if (!typing || isKeyboardChromeTarget(event.target)) return;
       event.preventDefault();
       focusTypingInput();
     },
-    [keyboardOpen, focusTypingInput],
+    [typing, focusTypingInput],
   );
 
+  const leave = () => {
+    clearLearnResume();
+    nav.toHome();
+  };
   const term = currentTerm(round);
   const phase = quiz ? "quiz" : round.phase;
+  const progressCurrent = round.phase === "roundEnd" ? round.terms.length : round.index + 1;
+  const progressTotal = round.terms.length;
   const onQuiz = () => {
     const next = requestQuiz(round);
     if (!next) return;
@@ -106,6 +152,7 @@ export function Learn({ terms, rng, now }: LearnProps) {
   };
   const onLearnResult = () => {
     if (!quiz?.result) return;
+    clearLearnResume();
     nav.toLearnResult(createLearnRoundResult(round.terms, quiz.result));
   };
 
@@ -139,36 +186,33 @@ export function Learn({ terms, rng, now }: LearnProps) {
         defaultValue=""
       />
       <div className="learn-screen__column">
-        <header className="flex flex-col gap-1">
+        <header className="learn-header">
           <h1 className="learn-title text-subtext">IT基礎用語</h1>
-          {quiz && <p className="learn-kicker text-subtext">理解度クイズ</p>}
-          {term && (
-            <>
-              <p className="learn-kicker text-subtext">
-                <span
-                  data-testid="learn-progress"
-                  aria-label={`用語 ${round.index + 1} / ${round.terms.length}`}
-                >
-                  {round.index + 1} / {round.terms.length}
-                </span>
+          <div className="learn-toolbar">
+            <p className="learn-kicker text-subtext">
+              <span
+                data-testid="learn-progress"
+                aria-label={`用語 ${progressCurrent} / ${progressTotal}`}
+              >
+                {progressCurrent} / {progressTotal}
+              </span>
+              {term && (
                 <span data-testid="learn-category">{TERM_CATEGORY_LABELS[term.category]}</span>
-              </p>
-              <h2 className="learn-name" data-testid="learn-name">
-                {term.name}
-              </h2>
-            </>
+              )}
+              {quiz && <span>理解度クイズ</span>}
+            </p>
+            <button type="button" data-testid="learn-quit" onClick={leave} className="learn-quit">
+              やめる
+            </button>
+          </div>
+          {term && (
+            <h2 className="learn-name" data-testid="learn-name">
+              {term.name}
+            </h2>
           )}
         </header>
 
-        {term && (
-          <p
-            id="learn-explanation-text"
-            className="learn-explanation text-text"
-            data-testid="learn-explanation"
-          >
-            {term.explanation}
-          </p>
-        )}
+        {term && <LearnExplanation term={term} collapsed={collapsed} />}
 
         <div className={`learn-stage${phase === "quiz" ? " learn-stage--quiz" : ""}`}>
           {round.phase === "reading" && term && (
@@ -181,41 +225,29 @@ export function Learn({ terms, rng, now }: LearnProps) {
               打つ
             </button>
           )}
-          {round.phase === "typing" && round.typing && <LearnAnswer typing={round.typing} />}
+          {round.phase === "typing" && round.typing && (
+            <LearnAnswer typing={round.typing} answerRef={answerRef} />
+          )}
           {phase === "roundEnd" && (
-            <RoundEnd
-              round={round}
-              quizButtonRef={quizButtonRef}
-              onQuiz={onQuiz}
-              onHome={nav.toHome}
-            />
+            <RoundEnd round={round} quizButtonRef={quizButtonRef} onQuiz={onQuiz} onHome={leave} />
           )}
           {quiz && <LearnQuizView quiz={quiz} onAnswer={onAnswer} onResult={onLearnResult} />}
         </div>
 
-        {round.phase !== "roundEnd" && (
+        {typing && (
           <footer className="learn-footer text-sm text-subtext">
-            {keyboardOpen && (
-              <button
-                type="button"
-                data-testid="learn-open-keyboard"
-                onMouseDown={(event) => event.preventDefault()}
-                onTouchStart={(event) => {
-                  event.preventDefault();
-                  focusTypingInput();
-                }}
-                onClick={focusTypingInput}
-                className="rounded-full border border-subtext px-4 py-2 hover:border-text hover:text-text"
-              >
-                キーボードを開く
-              </button>
-            )}
             <button
               type="button"
-              onClick={nav.toHome}
+              data-testid="learn-open-keyboard"
+              onMouseDown={(event) => event.preventDefault()}
+              onTouchStart={(event) => {
+                event.preventDefault();
+                focusTypingInput();
+              }}
+              onClick={focusTypingInput}
               className="rounded-full border border-subtext px-4 py-2 hover:border-text hover:text-text"
             >
-              やめる
+              キーボードを開く
             </button>
           </footer>
         )}
@@ -224,9 +256,46 @@ export function Learn({ terms, rng, now }: LearnProps) {
   );
 }
 
-function LearnAnswer({ typing }: { typing: TypingState }) {
+const LearnExplanation = memo(function LearnExplanation({
+  term,
+  collapsed,
+}: {
+  term: Term;
+  collapsed: boolean;
+}) {
+  const text = collapsed ? termSummary(term.explanation) : term.explanation;
+  const parts = emphasizeTermName(text, term.name);
   return (
     <p
+      id="learn-explanation-text"
+      className={`learn-explanation${collapsed ? " learn-explanation--collapsed" : ""}`}
+      data-testid="learn-explanation"
+      data-collapsed={collapsed ? "true" : "false"}
+      tabIndex={collapsed ? undefined : 0}
+    >
+      {parts.map((part, index) =>
+        part.term ? (
+          <strong key={index} className="learn-term">
+            {part.text}
+          </strong>
+        ) : (
+          <span key={index}>{part.text}</span>
+        ),
+      )}
+    </p>
+  );
+});
+
+function LearnAnswer({
+  typing,
+  answerRef,
+}: {
+  typing: TypingState;
+  answerRef: React.RefObject<HTMLParagraphElement | null>;
+}) {
+  return (
+    <p
+      ref={answerRef}
       className="typing-text learn-answer font-bold"
       data-testid="learn-answer"
       data-last-input={typing.lastInput ?? "none"}
@@ -289,14 +358,14 @@ function RoundEnd({
         data-testid="learn-to-quiz"
         data-next-phase="quiz"
         onClick={onQuiz}
-        className="rounded-full bg-perfect px-8 py-3 font-bold text-bg focus-visible:ring-4 focus-visible:ring-fever"
+        className="learn-tap rounded-full bg-perfect px-8 py-3 font-bold text-bg focus-visible:ring-4 focus-visible:ring-fever"
       >
         理解度クイズへ
       </button>
       <button
         type="button"
         onClick={onHome}
-        className="rounded-full border border-subtext px-8 py-3 text-subtext hover:text-text"
+        className="learn-tap rounded-full border border-subtext px-8 py-3 text-subtext hover:text-text"
       >
         ホームへ戻る
       </button>

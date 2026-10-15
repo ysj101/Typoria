@@ -1,7 +1,8 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { LEARN_RESUME_STORAGE_KEY } from "../game/learnResume";
 import { Result } from "./Result";
 import { Learn } from "./Learn";
 import { makeTerm } from "../test/factories";
@@ -58,14 +59,29 @@ async function finishRound() {
 
 const QUIZ_NOW = () => new Date("2026-10-14T09:00:00.000Z");
 
+async function leaveAndReturn(router: ReturnType<typeof renderLearn>) {
+  vi.restoreAllMocks();
+  await act(async () => {
+    await router.navigate("/");
+    await router.navigate("/learn");
+  });
+}
+
 describe("Learn page", () => {
   const previousViewport = Object.getOwnPropertyDescriptor(window, "visualViewport");
+
+  beforeEach(() => {
+    sessionStorage.clear();
+  });
 
   afterEach(() => {
     if (previousViewport) Object.defineProperty(window, "visualViewport", previousViewport);
     else delete (window as { visualViewport?: VisualViewport }).visualViewport;
     document.documentElement.style.removeProperty("--vvh");
     document.documentElement.style.removeProperty("--vv-top");
+    sessionStorage.clear();
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it("shows the term, then types it, and keeps the explanation on screen", async () => {
@@ -76,6 +92,10 @@ describe("Learn page", () => {
     expect(screen.getByTestId("learn-category")).toHaveTextContent("AI");
     expect(screen.getByTestId("learn-progress")).toHaveTextContent("1 / 3");
     expect(screen.getByTestId("learn-explanation")).toHaveTextContent("機械学習の解説");
+    expect(screen.getByTestId("learn-explanation").querySelector("strong")).toHaveTextContent(
+      "機械学習",
+    );
+    expect(screen.getByTestId("learn-quit")).toBeVisible();
     expect(screen.queryByTestId("learn-answer")).not.toBeInTheDocument();
 
     fireEvent.keyDown(screen.getByTestId("learn"), { key: "c" });
@@ -211,5 +231,130 @@ describe("Learn page", () => {
     expect(screen.getByTestId("learn")).toHaveClass("learn-screen--compact");
     expect(document.documentElement.style.getPropertyValue("--vvh")).toBe("320px");
     expect(document.documentElement.style.getPropertyValue("--vv-top")).toBe("18px");
+  });
+
+  it("collapses the explanation to one line while typing on a short viewport", async () => {
+    const vv = {
+      height: 320,
+      offsetTop: 0,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    };
+    Object.defineProperty(window, "visualViewport", { configurable: true, value: vv });
+
+    renderLearn();
+    expect(screen.getByTestId("learn-explanation")).toHaveAttribute("data-collapsed", "false");
+    expect(screen.getByTestId("learn-explanation")).toHaveTextContent("画面の上に残る");
+
+    await userEvent.click(screen.getByRole("button", { name: "打つ" }));
+    const explanation = screen.getByTestId("learn-explanation");
+    expect(screen.getByTestId("learn")).toHaveAttribute("data-phase", "typing");
+    expect(screen.getByTestId("learn-explanation")).toHaveAttribute("data-collapsed", "true");
+    expect(explanation).toHaveAttribute("data-collapsed", "true");
+    expect(explanation).toHaveTextContent("機械学習の解説。");
+    expect(explanation).not.toHaveTextContent("画面の上に残る");
+    expect(explanation.querySelector("strong")).toHaveTextContent("機械学習");
+    expect(screen.getByTestId("learn-answer")).toBeInTheDocument();
+    expect(screen.getByTestId("learn-progress")).toBeVisible();
+    expect(screen.getByTestId("learn-quit")).toBeVisible();
+  });
+
+  it("keeps round progress and quit visible through the quiz", async () => {
+    renderLearn(TERMS, { rng: () => 0, now: QUIZ_NOW });
+    expect(screen.getByTestId("learn-progress")).toHaveTextContent("1 / 3");
+    expect(screen.getByRole("button", { name: "やめる" })).toBeVisible();
+
+    await userEvent.click(screen.getByRole("button", { name: "打つ" }));
+    expect(screen.getByTestId("learn")).toHaveAttribute("data-phase", "typing");
+    expect(screen.getByTestId("learn-progress")).toBeVisible();
+    expect(screen.getByTestId("learn-quit")).toBeVisible();
+    typeOnLearn("cat");
+
+    await userEvent.click(screen.getByRole("button", { name: "打つ" }));
+    typeOnLearn("saas");
+    await userEvent.click(screen.getByRole("button", { name: "打つ" }));
+    typeOnLearn("html");
+
+    expect(screen.getByTestId("learn")).toHaveAttribute("data-phase", "roundEnd");
+    expect(screen.getByTestId("learn-progress")).toHaveTextContent("3 / 3");
+    expect(screen.getByRole("button", { name: "やめる" })).toBeVisible();
+
+    await userEvent.click(screen.getByRole("button", { name: "理解度クイズへ" }));
+    expect(screen.getByTestId("learn")).toHaveAttribute("data-phase", "quiz");
+    expect(screen.getByTestId("learn-progress")).toHaveTextContent("3 / 3");
+    expect(screen.getByRole("button", { name: "やめる" })).toBeVisible();
+  });
+
+  it("resumes the same term and typing phase after the tab is hidden", async () => {
+    const router = renderLearn();
+    await userEvent.click(screen.getByRole("button", { name: "打つ" }));
+    typeOnLearn("ca");
+    typeOnLearn("t");
+    await userEvent.click(screen.getByRole("button", { name: "打つ" }));
+    typeOnLearn("s");
+    expect(screen.getByTestId("learn-name")).toHaveTextContent("SaaS");
+    expect(screen.getByTestId("learn")).toHaveAttribute("data-phase", "typing");
+
+    await leaveAndReturn(router);
+
+    expect(screen.getByTestId("learn")).toHaveAttribute("data-phase", "typing");
+    expect(screen.getByTestId("learn")).toHaveAttribute("data-term-id", "cloud-001");
+    expect(screen.getByTestId("learn-name")).toHaveTextContent("SaaS");
+    expect(screen.getByTestId("learn-progress")).toHaveTextContent("2 / 3");
+    expect(screen.getByTestId("learn-answer").querySelectorAll("[data-state=typed]")).toHaveLength(
+      1,
+    );
+  });
+
+  it("resumes an answered quiz after the screen is locked", async () => {
+    const router = renderLearn(TERMS, { rng: () => 0, now: QUIZ_NOW });
+    await finishRound();
+    await userEvent.click(screen.getByRole("button", { name: "理解度クイズへ" }));
+    await userEvent.click(screen.getAllByTestId("learn-quiz-choice")[3]!);
+    expect(screen.getByTestId("learn-quiz-feedback")).toHaveAttribute("data-correct", "true");
+
+    await leaveAndReturn(router);
+
+    expect(screen.getByTestId("learn")).toHaveAttribute("data-phase", "quiz");
+    expect(screen.getByTestId("learn-quiz-question")).toHaveTextContent("機械学習の質問");
+    expect(screen.getByTestId("learn-quiz-feedback")).toHaveAttribute("data-correct", "true");
+    expect(screen.getByTestId("learn-quiz-judgment")).toHaveTextContent("正解");
+    expect(screen.getByTestId("learn-progress")).toHaveTextContent("3 / 3");
+  });
+
+  it("starts a fresh round after quit clears the interruption snapshot", async () => {
+    const router = renderLearn();
+    await userEvent.click(screen.getByRole("button", { name: "打つ" }));
+    typeOnLearn("c");
+    expect(sessionStorage.getItem(LEARN_RESUME_STORAGE_KEY)).not.toBeNull();
+
+    vi.restoreAllMocks();
+    await userEvent.click(screen.getByRole("button", { name: "やめる" }));
+    expect(router.state.location.pathname).toBe("/");
+    expect(sessionStorage.getItem(LEARN_RESUME_STORAGE_KEY)).toBeNull();
+
+    cleanup();
+    renderLearn();
+    expect(screen.getByTestId("learn")).toHaveAttribute("data-phase", "reading");
+    expect(screen.getByTestId("learn-name")).toHaveTextContent("機械学習");
+    expect(screen.queryByTestId("learn-answer")).not.toBeInTheDocument();
+  });
+
+  it("does not shake on a miss and follows reduced motion", async () => {
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn().mockReturnValue({
+        matches: true,
+        media: "(prefers-reduced-motion: reduce)",
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      }),
+    );
+    renderLearn();
+    const learn = screen.getByTestId("learn");
+    await userEvent.click(screen.getByRole("button", { name: "打つ" }));
+    fireEvent.keyDown(learn, { key: "x" });
+    expect(learn).not.toHaveAttribute("data-shake");
+    expect(screen.getByTestId("learn-answer")).toHaveAttribute("data-last-input", "incorrect");
   });
 });
