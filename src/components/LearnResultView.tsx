@@ -1,5 +1,5 @@
-import { useEffect } from "react";
 import type { LearnRoundResult } from "../game/learnQuiz";
+import { useResultShortcuts } from "../hooks/useResultShortcuts";
 
 export interface LearnResultViewProps {
   result: LearnRoundResult;
@@ -11,22 +11,7 @@ export interface LearnResultViewProps {
 export function LearnResultView({ result, onAgain, onHome }: LearnResultViewProps) {
   const quizzed = result.terms.find((term) => term.termId === result.quiz.termId);
 
-  useEffect(() => {
-    const handler = (event: KeyboardEvent) => {
-      if (event.isComposing) return;
-      if (event.key === "Enter") {
-        // ボタンにフォーカスがあるときは、そのボタンの click に任せる
-        if (event.target instanceof Element && event.target.closest("button")) return;
-        event.preventDefault();
-        onAgain();
-      } else if (event.key === "Escape") {
-        event.preventDefault();
-        onHome();
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [onAgain, onHome]);
+  useResultShortcuts(onAgain, onHome);
 
   return (
     <main

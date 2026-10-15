@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { DAILY_MISSIONS } from "../game/habit";
 import { calcStars, problemAccuracy } from "../game/scoring";
 import { useReducedMotion } from "../hooks/useReducedMotion";
+import { useResultShortcuts } from "../hooks/useResultShortcuts";
 import type { DailyMissionId, Difficulty, GameSession } from "../types/game";
 
 /**
@@ -128,20 +129,7 @@ export function ResultView({
   }, [reduced, stars, score, totalXp]);
 
   // Enter で PLAY AGAIN（演出中でも有効。AC-18）、Esc で BACK TO HOME
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.isComposing) return;
-      if (e.key === "Enter") {
-        e.preventDefault();
-        onPlayAgain();
-      } else if (e.key === "Escape") {
-        e.preventDefault();
-        onBackHome();
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [onPlayAgain, onBackHome]);
+  useResultShortcuts(onPlayAgain, onBackHome);
 
   const missionRows = useMemo(
     () =>

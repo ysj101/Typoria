@@ -1,24 +1,10 @@
-import { expect, test, type Page } from "@playwright/test";
-import AxeBuilder from "@axe-core/playwright";
-import { typeChars, usesSoftKeyboard } from "./helpers";
-
-const SERIOUS = ["serious", "critical"];
-
-async function expectNoSeriousViolations(page: Page, label: string) {
-  const results = await new AxeBuilder({ page }).analyze();
-  const serious = results.violations.filter((v) => SERIOUS.includes(v.impact ?? ""));
-  expect(
-    serious.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`),
-    `${label} に重大な a11y 違反`,
-  ).toEqual([]);
-}
-
-async function expectNoHorizontalScroll(page: Page) {
-  const overflow = await page.evaluate(
-    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-  );
-  expect(overflow).toBeLessThanOrEqual(0);
-}
+import { expect, test } from "@playwright/test";
+import {
+  expectNoHorizontalScroll,
+  expectNoSeriousViolations,
+  typeChars,
+  usesSoftKeyboard,
+} from "./helpers";
 
 test.describe("learn round", () => {
   test("reads, types, quizzes, and shows the learn result", async ({ page }) => {

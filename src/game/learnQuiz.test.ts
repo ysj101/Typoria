@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { Term, TermCategory } from "../types/term";
+import { makeTerm } from "../test/factories";
+import type { Term } from "../types/term";
 import {
   answerLearnQuiz,
   createLearnQuiz,
@@ -13,11 +14,7 @@ function term(
   name: string,
   options?: { answerIndex?: 0 | 1 | 2 | 3; choices?: [string, string, string, string] },
 ): Term {
-  const category = id.slice(0, id.lastIndexOf("-")) as TermCategory;
-  return {
-    id,
-    category,
-    level: 1,
+  return makeTerm(id, {
     name,
     explanation: `${name}は基礎です。次の文で補足します。`,
     typingText: "term",
@@ -27,7 +24,7 @@ function term(
       answerIndex: options?.answerIndex ?? 0,
       explanation: `${name}のクイズ解説`,
     },
-  };
+  });
 }
 
 const ROUND = [
@@ -61,10 +58,8 @@ describe("termSummary", () => {
 });
 
 describe("createLearnQuiz", () => {
-  it("rejects an empty round and a bad rng", () => {
+  it("rejects an empty round", () => {
     expect(() => createLearnQuiz([])).toThrow(/terms must not be empty/);
-    expect(() => createLearnQuiz(ROUND, { rng: () => 1 })).toThrow(/\[0, 1\)/);
-    expect(() => createLearnQuiz(ROUND, { rng: () => -0.01 })).toThrow(/\[0, 1\)/);
   });
 
   it("picks a term and shuffles choices with the injected rng", () => {

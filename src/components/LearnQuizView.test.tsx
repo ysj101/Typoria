@@ -2,15 +2,11 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { answerLearnQuiz, createLearnQuiz } from "../game/learnQuiz";
-import type { Term, TermCategory } from "../types/term";
+import { makeTerm } from "../test/factories";
 import { LearnQuizView } from "./LearnQuizView";
 
-function term(id: string, name: string): Term {
-  const category = id.slice(0, id.lastIndexOf("-")) as TermCategory;
-  return {
-    id,
-    category,
-    level: 1,
+const term = (id: string, name: string) =>
+  makeTerm(id, {
     name,
     explanation: `${name}は基礎です。補足です。`,
     typingText: "term",
@@ -20,8 +16,7 @@ function term(id: string, name: string): Term {
       answerIndex: 0,
       explanation: `${name}のクイズ解説`,
     },
-  };
-}
+  });
 
 const TERMS = [term("ai-001", "機械学習"), term("cloud-001", "SaaS"), term("web-001", "HTML")];
 const NOW = () => new Date("2026-10-14T09:00:00.000Z");

@@ -95,6 +95,7 @@ export function Learn({ terms, rng, now }: LearnProps) {
   );
 
   const term = currentTerm(round);
+  const phase = quiz ? "quiz" : round.phase;
   const onQuiz = () => {
     const next = requestQuiz(round);
     if (!next) return;
@@ -112,10 +113,10 @@ export function Learn({ terms, rng, now }: LearnProps) {
     <section
       ref={containerRef}
       tabIndex={-1}
-      aria-label={quiz ? "理解度クイズ" : "学習ラウンド"}
+      aria-label={phase === "quiz" ? "理解度クイズ" : "学習ラウンド"}
       className={`learn-screen outline-none${compact ? " learn-screen--compact" : ""}`}
       data-testid="learn"
-      data-phase={quiz ? "quiz" : round.phase}
+      data-phase={phase}
       data-compact={compact ? "true" : "false"}
       data-term-id={term?.id ?? ""}
       onMouseDown={keepSoftKeyboard}
@@ -169,7 +170,7 @@ export function Learn({ terms, rng, now }: LearnProps) {
           </p>
         )}
 
-        <div className={`learn-stage${quiz ? " learn-stage--quiz" : ""}`}>
+        <div className={`learn-stage${phase === "quiz" ? " learn-stage--quiz" : ""}`}>
           {round.phase === "reading" && term && (
             <button
               ref={beginButtonRef}
@@ -181,7 +182,7 @@ export function Learn({ terms, rng, now }: LearnProps) {
             </button>
           )}
           {round.phase === "typing" && round.typing && <LearnAnswer typing={round.typing} />}
-          {round.phase === "roundEnd" && !quiz && (
+          {phase === "roundEnd" && (
             <RoundEnd
               round={round}
               quizButtonRef={quizButtonRef}

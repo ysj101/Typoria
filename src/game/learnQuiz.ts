@@ -5,9 +5,7 @@
  * 永続化は #76。ここはラウンド結果を返すところまで。
  */
 import type { Term } from "../types/term";
-
-/** [0, 1) の乱数を返す関数 */
-type Rng = () => number;
+import { shuffle, type Rng } from "./questions";
 
 /** `TermQuiz.choices` の元の添字 */
 export type QuizChoiceIndex = 0 | 1 | 2 | 3;
@@ -66,15 +64,7 @@ export interface CreateLearnQuizOptions {
   rng?: Rng;
 }
 
-function readRng(rng: Rng): number {
-  const sample = rng();
-  if (!(sample >= 0 && sample < 1)) {
-    throw new Error("createLearnQuiz: rng must return a number in [0, 1)");
-  }
-  return sample;
-}
-
-function isQuizChoiceIndex(value: number): value is QuizChoiceIndex {
+export function isQuizChoiceIndex(value: unknown): value is QuizChoiceIndex {
   return value === 0 || value === 1 || value === 2 || value === 3;
 }
 
@@ -87,21 +77,10 @@ export function termSummary(explanation: string): string {
 }
 
 function shuffleChoices(choices: readonly string[], rng: Rng): LearnQuizChoice[] {
-  const arr: LearnQuizChoice[] = choices.map((text, index) => ({
-    sourceIndex: index as QuizChoiceIndex,
-    text,
-  }));
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(readRng(rng) * (i + 1));
-    const left = arr[i];
-    const right = arr[j];
-    if (left === undefined || right === undefined) {
-      throw new Error("createLearnQuiz: failed to shuffle choices");
-    }
-    arr[i] = right;
-    arr[j] = left;
-  }
-  return arr;
+  return shuffle(
+    choices.map((text, index) => ({ sourceIndex: index as QuizChoiceIndex, text })),
+    rng,
+  );
 }
 
 /**
@@ -112,15 +91,8 @@ export function createLearnQuiz(
   terms: readonly Term[],
   { rng = Math.random }: CreateLearnQuizOptions = {},
 ): LearnQuizState {
-  if (terms.length === 0) {
-    throw new Error("createLearnQuiz: terms must not be empty");
-  }
-  if (typeof rng !== "function") {
-    throw new Error("createLearnQuiz: rng must be a function");
-  }
-
-  const picked = terms[Math.floor(readRng(rng) * terms.length)];
-  if (!picked) throw new Error("createLearnQuiz: failed to pick a term");
+  const picked = terms[Math.floor(rng() * terms.length)];
+  if (!picked) throw new Error("createLearnQuiz: terms must not be empty");
 
   return {
     phase: "asking",
@@ -170,11 +142,7 @@ export function createLearnRoundResult(
       name: term.name,
       summary: termSummary(term.explanation),
     })),
-    quiz: {
-      termId: quiz.termId,
-      correct: quiz.correct,
-      answeredAt: quiz.answeredAt,
-    },
+    quiz,
   };
 }
 
@@ -186,20 +154,26 @@ function isLearnedTermSummary(value: unknown): value is LearnedTermSummary {
   );
 }
 
+export function isLearnQuizResult(value: unknown): value is LearnQuizResult {
+  if (!value || typeof value !== "object") return false;
+  const v = value as Record<string, unknown>;
+  return (
+    typeof v.termId === "string" &&
+    v.termId.length > 0 &&
+    typeof v.correct === "boolean" &&
+    typeof v.answeredAt === "string" &&
+    v.answeredAt.length > 0
+  );
+}
+
 /** リザルトの route state が学習ラウンドの結果か */
 export function isLearnRoundResult(value: unknown): value is LearnRoundResult {
   if (!value || typeof value !== "object") return false;
   const v = value as Record<string, unknown>;
-  if (!Array.isArray(v.terms) || v.terms.length === 0 || !v.terms.every(isLearnedTermSummary)) {
-    return false;
-  }
-  if (!v.quiz || typeof v.quiz !== "object") return false;
-  const quiz = v.quiz as Record<string, unknown>;
   return (
-    typeof quiz.termId === "string" &&
-    quiz.termId.length > 0 &&
-    typeof quiz.correct === "boolean" &&
-    typeof quiz.answeredAt === "string" &&
-    quiz.answeredAt.length > 0
+    Array.isArray(v.terms) &&
+    v.terms.length > 0 &&
+    v.terms.every(isLearnedTermSummary) &&
+    isLearnQuizResult(v.quiz)
   );
 }
