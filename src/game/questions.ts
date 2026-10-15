@@ -39,7 +39,8 @@ const WEAK_INCORRECT_PER_ATTEMPT = 3;
 /** 正答率がこれ未満なら苦手（§7.3） */
 const WEAK_ACCURACY = 0.8;
 
-function shuffle<T>(items: T[], rng: Rng): T[] {
+/** Fisher–Yates で複製をシャッフルする（元配列は変更しない） */
+export function shuffle<T>(items: readonly T[], rng: Rng): T[] {
   const arr = items.slice();
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1));

@@ -1,0 +1,622 @@
+[
+  {
+    "id": "ai-001",
+    "category": "ai",
+    "level": 1,
+    "name": "機械学習",
+    "explanation": "機械学習は、大量のデータから規則やパターンをコンピュータが自ら見つけ、未知のデータに対する予測や分類を行う技術です。プログラムにすべての判断ルールを人が書き切るのではなく、例となるデータを与えて学習させます。画像認識や売上予測など、ルール化しにくい問題で使われます。",
+    "typingText": "machine learning finds patterns in data to make predictions",
+    "quiz": {
+      "question": "機械学習で、人がすべての判断ルールを書き切る代わりにコンピュータへ与えるものは何ですか？",
+      "choices": [
+        "例となるデータ",
+        "完成した画面の色",
+        "印刷した手順書だけ",
+        "サーバの電源ケーブル"
+      ],
+      "answerIndex": 0,
+      "explanation": "機械学習は、例となるデータを与えて規則やパターンを見つけさせる技術です。"
+    },
+    "related": ["ai-002", "ai-004"]
+  },
+  {
+    "id": "ai-002",
+    "category": "ai",
+    "level": 1,
+    "name": "LLM",
+    "explanation": "LLM（大規模言語モデル）は、膨大な文章を学習し、次に来そうな言葉を予測することで文章の生成や質問への回答を行うAIです。チャットでの対話、要約、翻訳、プログラムの下書きなどに使われます。学習データにない事実をそれっぽく述べることもあるため、出力は人が確認する必要があります。",
+    "typingText": "an LLM predicts the next words to generate text",
+    "quiz": {
+      "question": "LLMが文章を作るとき、基本的に予測しているものは何ですか？",
+      "choices": ["明日の気温", "次に来そうな言葉", "サーバの在庫数", "利用者の指紋"],
+      "answerIndex": 1,
+      "explanation": "LLMは、次に来そうな言葉を予測して文章を生成したり質問に答えたりします。"
+    },
+    "related": ["ai-001", "ai-003", "ai-005"]
+  },
+  {
+    "id": "ai-003",
+    "category": "ai",
+    "level": 1,
+    "name": "プロンプト",
+    "explanation": "プロンプトは、AIに対して人が渡す指示や質問の文章です。目的、前提、出力形式、制約を具体的に書くほど、欲しい結果に近づきやすくなります。たとえば「新人向けに3点で説明して」のように、読み手と形式を指定すると回答のぶれを減らせます。曖昧な依頼は曖昧な出力になりがちです。",
+    "typingText": "a prompt is the instruction you give to an AI",
+    "quiz": {
+      "question": "プロンプトとしてAIに渡すものはどれですか？",
+      "choices": [
+        "学習済みモデルのファイルサイズ",
+        "サーバのホスト名",
+        "指示や質問の文章",
+        "データベースの主キー"
+      ],
+      "answerIndex": 2,
+      "explanation": "プロンプトは、AIに対して人が渡す指示や質問の文章です。"
+    },
+    "related": ["ai-002"]
+  },
+  {
+    "id": "ai-004",
+    "category": "ai",
+    "level": 2,
+    "name": "過学習",
+    "explanation": "過学習は、モデルが学習用のデータに合わせすぎて、新しいデータでは精度が落ちる状態です。教科書の例題だけは完璧なのに、少し条件が変わった問題で解けなくなるのに似ています。対策として、学習に使っていないデータで評価したり、モデルを単純にしたり、データを増やしたりします。",
+    "typingText": "overfitting memorizes training data and fails on new data",
+    "quiz": {
+      "question": "過学習のモデルは、どのようなデータで精度が落ちやすいですか？",
+      "choices": [
+        "学習に使ったデータそのもの",
+        "空の入力",
+        "ラベルのない列名",
+        "学習に使っていない新しいデータ"
+      ],
+      "answerIndex": 3,
+      "explanation": "過学習は、学習用データに合わせすぎて、新しいデータでは精度が落ちる状態です。"
+    },
+    "related": ["ai-001", "ai-005"]
+  },
+  {
+    "id": "ai-005",
+    "category": "ai",
+    "level": 2,
+    "name": "推論",
+    "explanation": "推論は、学習済みのモデルに新しい入力を渡して結果を得る処理です。学習はモデルを作る段階、推論は作ったモデルを使って予測や回答を出す段階、と分けると整理しやすくなります。チャットで質問したときに回答が返るまでの処理は推論にあたります。大きなモデルでは計算資源も使います。",
+    "typingText": "inference uses a trained model to answer new input",
+    "quiz": {
+      "question": "学習済みモデルに新しい入力を渡して結果を得る処理を何と呼びますか？",
+      "choices": ["デプロイ", "推論", "インデックス", "ハッシュ化"],
+      "answerIndex": 1,
+      "explanation": "学習済みのモデルに新しい入力を渡して結果を得る処理が推論です。"
+    },
+    "related": ["ai-002", "ai-004"]
+  },
+  {
+    "id": "cloud-001",
+    "category": "cloud",
+    "level": 1,
+    "name": "IaaS",
+    "explanation": "IaaSは、サーバやストレージ、ネットワークなどの基盤をインターネット経由で借りるクラウドの形です。利用者はOSより上のミドルウェアやアプリを自分で構築・運用します。物理マシンを買わずに必要な台数へ増やせるのが利点です。Infrastructure as a Serviceの略で、土台だけをサービスとして使うイメージです。",
+    "typingText": "IaaS rents servers storage and networks over the internet",
+    "quiz": {
+      "question": "IaaSで利用者がインターネット経由で借りるものはどれですか？",
+      "choices": ["サーバなどの基盤", "完成したメールアプリだけ", "オフィスの机", "紙の手順書"],
+      "answerIndex": 0,
+      "explanation": "IaaSは、サーバやストレージ、ネットワークなどの基盤を借りるクラウドの形です。"
+    },
+    "related": ["cloud-002", "cloud-005"]
+  },
+  {
+    "id": "cloud-002",
+    "category": "cloud",
+    "level": 1,
+    "name": "SaaS",
+    "explanation": "SaaSは、ソフトウェアを自分のPCへインストールせず、ブラウザなどからサービスとして利用する形態です。メールや文書作成、チャットツールのように、提供者側が更新や稼働を担います。利用者はアカウントを作ってすぐ使い始められます。Software as a Serviceの略で、完成したアプリそのものを借りるイメージです。",
+    "typingText": "SaaS lets you use software in a browser as a service",
+    "quiz": {
+      "question": "SaaSの説明として最も近いものはどれですか？",
+      "choices": [
+        "物理サーバを自社で組み立てる",
+        "OSだけを借りてアプリは自分で入れる",
+        "ブラウザなどからソフトウェアをサービスとして使う",
+        "データを表に保存する"
+      ],
+      "answerIndex": 2,
+      "explanation": "SaaSは、インストールせずブラウザなどからソフトウェアをサービスとして使う形態です。"
+    },
+    "related": ["cloud-001"]
+  },
+  {
+    "id": "cloud-003",
+    "category": "cloud",
+    "level": 1,
+    "name": "コンテナ",
+    "explanation": "コンテナは、アプリとその実行に必要なライブラリをひとまとめにし、どの環境でも同じように動かしやすくする技術です。仮想マシンより軽く、起動が速いことが多いです。開発機で動いた構成を、テスト環境や本番環境へほぼそのまま持ち運べます。Dockerが代表的な道具として広く使われています。",
+    "typingText": "a container packages an app so it runs the same anywhere",
+    "quiz": {
+      "question": "コンテナがひとまとめにするものは何ですか？",
+      "choices": [
+        "利用者のパスワード",
+        "アプリと実行に必要なライブラリ",
+        "会社の請求書",
+        "DNSの電話帳"
+      ],
+      "answerIndex": 1,
+      "explanation": "コンテナは、アプリと実行に必要なライブラリをまとめ、どの環境でも動かしやすくします。"
+    },
+    "related": ["cloud-005", "dev-005"]
+  },
+  {
+    "id": "cloud-004",
+    "category": "cloud",
+    "level": 2,
+    "name": "ロードバランサ",
+    "explanation": "ロードバランサは、届いた通信を複数のサーバへ振り分け、1台に負荷が集中しないようにする仕組みです。一部のサーバが止まっても、残りのサーバへ通信を送ることでサービスを続けやすくなります。Webサイトへのアクセスが増えたときに、処理を分担させる役割を担います。交通を複数のレーンへ分ける係のような存在です。",
+    "typingText": "load balancer distributes traffic across servers",
+    "quiz": {
+      "question": "ロードバランサの主な役割はどれですか？",
+      "choices": [
+        "通信を複数のサーバへ振り分ける",
+        "ドメイン名をIPアドレスに変える",
+        "パスワードをハッシュ化する",
+        "HTMLの見出しを書く"
+      ],
+      "answerIndex": 0,
+      "explanation": "ロードバランサは、届いた通信を複数のサーバへ振り分け、負荷が集中しないようにします。"
+    },
+    "related": ["cloud-001", "network-003"]
+  },
+  {
+    "id": "cloud-005",
+    "category": "cloud",
+    "level": 2,
+    "name": "サーバーレス",
+    "explanation": "サーバーレスは、利用者がサーバ台数を常時管理せず、処理が呼ばれたときだけコードを実行するクラウドの使い方です。リクエストの量に応じて実行回数が変わり、使った分だけ費用がかかる形が多いです。常時起動のサーバが不要な小さなAPIや、ファイルアップロード後の処理などに向いています。裏側ではクラウド事業者が計算機を運用しています。",
+    "typingText": "serverless runs code on demand without managing servers",
+    "quiz": {
+      "question": "サーバーレスでコードが実行されるタイミングはどれですか？",
+      "choices": [
+        "毎月1日の早朝だけ",
+        "物理マシンを購入した直後",
+        "利用者がOSを更新したとき",
+        "処理が呼ばれたとき"
+      ],
+      "answerIndex": 3,
+      "explanation": "サーバーレスは、サーバ台数を常時管理せず、処理が呼ばれたときだけコードを実行します。"
+    },
+    "related": ["cloud-001", "cloud-003"]
+  },
+  {
+    "id": "security-001",
+    "category": "security",
+    "level": 2,
+    "name": "公開鍵暗号",
+    "explanation": "公開鍵暗号は、公開してよい鍵と秘密にしておく鍵のペアで、暗号化や電子署名を行う方式です。相手の公開鍵で暗号化すると、対応する秘密鍵を持つ人だけが復号できます。秘密鍵は本人だけが保管します。HTTPSの通信や、ソフトウェアの配布元を確認する署名などで使われています。",
+    "typingText": "public-key cryptography uses a public and a private key",
+    "quiz": {
+      "question": "公開鍵で暗号化されたデータを復号できるのは誰ですか？",
+      "choices": [
+        "公開鍵を知っている全員",
+        "同じネットワークの利用者",
+        "対応する秘密鍵を持つ人",
+        "DNSを管理する人"
+      ],
+      "answerIndex": 2,
+      "explanation": "相手の公開鍵で暗号化すると、対応する秘密鍵を持つ人だけが復号できます。"
+    },
+    "related": ["security-004", "network-003"]
+  },
+  {
+    "id": "security-002",
+    "category": "security",
+    "level": 2,
+    "name": "XSS",
+    "explanation": "XSSは、Webページに悪意のあるスクリプトを紛れ込ませ、利用者のブラウザ上で実行させる攻撃です。コメント欄や検索語をそのまま画面に出すと、入力がプログラムとして動いてしまうことがあります。対策は、表示する文字列をエスケープし、信頼できないHTMLをそのまま埋め込まないことです。Cross-Site Scriptingの略です。",
+    "typingText": "XSS injects a script that runs in the users browser",
+    "quiz": {
+      "question": "XSSで悪意のあるスクリプトが実行される場所はどこですか？",
+      "choices": ["利用者のブラウザ", "データベースの索引", "電源タップ", "紙の設計書"],
+      "answerIndex": 0,
+      "explanation": "XSSは、悪意のあるスクリプトを利用者のブラウザ上で実行させる攻撃です。"
+    },
+    "related": ["web-001", "security-005"]
+  },
+  {
+    "id": "security-003",
+    "category": "security",
+    "level": 1,
+    "name": "多要素認証",
+    "explanation": "多要素認証は、パスワードに加えて、スマホの確認コードや認証アプリなど別の要素でも本人確認する方式です。パスワードが漏れても、もう一つの要素がなければログインしにくくなります。知識・所持・生体のように種類の違う証拠を組み合わせるのがポイントです。MFAや二要素認証と呼ばれることが多いです。",
+    "typingText": "MFA checks a password plus another proof of identity",
+    "quiz": {
+      "question": "多要素認証でパスワードと組み合わせるものはどれですか？",
+      "choices": [
+        "同じパスワードをもう一度",
+        "確認コードなど別の要素",
+        "画面の背景色",
+        "ファイル名の大文字"
+      ],
+      "answerIndex": 1,
+      "explanation": "多要素認証は、パスワードに加えて確認コードなど別の要素でも本人確認します。"
+    },
+    "related": ["security-004"]
+  },
+  {
+    "id": "security-004",
+    "category": "security",
+    "level": 1,
+    "name": "ハッシュ化",
+    "explanation": "ハッシュ化は、入力データから一定の手順で固定長の値を求める処理です。同じ入力なら同じ値になり、値から元のデータを復元するのは困難になるよう設計された関数が使われます。パスワードをそのまま保存せずハッシュ値を保存する、ファイルの改ざんを検知する、といった用途があります。暗号化と違い、元に戻すための鍵はありません。",
+    "typingText": "hashing turns data into a fixed value that is hard to reverse",
+    "quiz": {
+      "question": "ハッシュ化と暗号化の違いとして適切なものはどれですか？",
+      "choices": [
+        "ハッシュ化は必ず元の文章に戻せる",
+        "ハッシュ化には復号用の鍵がある",
+        "暗号化は固定長の索引である",
+        "ハッシュ化には元に戻すための鍵がない"
+      ],
+      "answerIndex": 3,
+      "explanation": "暗号化と違い、ハッシュ化には元のデータを戻すための鍵はありません。"
+    },
+    "related": ["security-001", "security-003"]
+  },
+  {
+    "id": "security-005",
+    "category": "security",
+    "level": 2,
+    "name": "SQLインジェクション",
+    "explanation": "SQLインジェクションは、入力欄にSQLの断片を混ぜ、データベースへの命令を書き換えてしまう攻撃です。ログイン画面や検索で、利用者の入力をSQL文へそのまま連結すると起こり得ます。対策は、プレースホルダを使って入力を命令ではなく値として扱うことです。想定外のデータの閲覧や改ざんを防ぐ基本の対策です。",
+    "typingText": "SQL injection rewrites a query by mixing in user input",
+    "quiz": {
+      "question": "SQLインジェクションを防ぐ基本の対策はどれですか？",
+      "choices": [
+        "入力を画面の色として扱う",
+        "プレースホルダで入力を値として扱う",
+        "パスワードを平文で保存する",
+        "通信の確認応答を省く"
+      ],
+      "answerIndex": 1,
+      "explanation": "プレースホルダを使い、入力を命令ではなく値として扱うのが基本の対策です。"
+    },
+    "related": ["database-002", "security-002"]
+  },
+  {
+    "id": "network-001",
+    "category": "network",
+    "level": 1,
+    "name": "IPアドレス",
+    "explanation": "IPアドレスは、ネットワーク上の機器を識別するための番号です。手紙の宛先のように、データがどのコンピュータへ届けばよいかを示します。家庭のWi-Fiにつながるスマホや、クラウド上のサーバにも割り当てられます。IPv4は数字をドットで区切った形で、IPv6はより多くの機器に対応できる長い形式です。",
+    "typingText": "an IP address identifies a device on a network",
+    "quiz": {
+      "question": "IPアドレスが表すものはどれですか？",
+      "choices": [
+        "ネットワーク上の機器を識別する番号",
+        "Webページの見出し",
+        "パスワードの代わりになる質問",
+        "表の行を速く探す索引"
+      ],
+      "answerIndex": 0,
+      "explanation": "IPアドレスは、ネットワーク上の機器を識別するための番号です。"
+    },
+    "related": ["network-002", "network-005"]
+  },
+  {
+    "id": "network-002",
+    "category": "network",
+    "level": 1,
+    "name": "DNS",
+    "explanation": "DNSは、人が読むドメイン名を、コンピュータが通信に使うIPアドレスへ変換する仕組みです。ブラウザにサイト名を入力すると、DNSが対応する宛先を調べ、そのサーバへ接続します。電話帳で名前から番号を引くのに似ています。名前とアドレスの対応が誤っていると、意図しないサーバへつながることがあります。",
+    "typingText": "DNS turns a domain name into an IP address",
+    "quiz": {
+      "question": "DNSがドメイン名から調べるものは何ですか？",
+      "choices": ["CSSの余白", "プルリクエストの差分", "IPアドレス", "主キーの空欄"],
+      "answerIndex": 2,
+      "explanation": "DNSは、人が読むドメイン名を通信に使うIPアドレスへ変換します。"
+    },
+    "related": ["network-001", "web-003"]
+  },
+  {
+    "id": "network-003",
+    "category": "network",
+    "level": 1,
+    "name": "HTTP",
+    "explanation": "HTTPは、ブラウザとWebサーバが文書やデータをやり取りするための約束事です。ページを見たいときはGET、フォームを送りたいときはPOSTのように、目的に応じたメソッドを使います。ステータスコードは結果を表し、200は成功、404は見つからない、という意味です。Webの基本となる通信のルールです。",
+    "typingText": "HTTP is the protocol browsers use to talk to web servers",
+    "quiz": {
+      "question": "HTTPでページの取得に使うメソッドはどれですか？",
+      "choices": ["DELETE", "GET", "主キー", "コミット"],
+      "answerIndex": 1,
+      "explanation": "HTTPでは、ページを見たいときはGET、フォームを送るときはPOSTを使います。"
+    },
+    "related": ["network-004", "web-005"]
+  },
+  {
+    "id": "network-004",
+    "category": "network",
+    "level": 2,
+    "name": "TCP",
+    "explanation": "TCPは、データを順番どおりに、欠けなく届けるための通信手順です。送ったデータに対して受信側が確認を返し、届かなければ再送します。Webやメールなど、内容が欠けると困る通信で広く使われます。速度を優先して欠落を許容するUDPとは対照的に、信頼性を重視する方式です。届いた内容をアプリがそのまま扱えます。",
+    "typingText": "TCP delivers data in order and resends what is lost",
+    "quiz": {
+      "question": "TCPがUDPと比べて重視していることは何ですか？",
+      "choices": [
+        "欠落を許して速度だけを上げること",
+        "画面の色を指定すること",
+        "パスワードを公開すること",
+        "データを欠けなく届ける信頼性"
+      ],
+      "answerIndex": 3,
+      "explanation": "TCPは、データを欠けなく届ける信頼性を重視し、届かなければ再送します。"
+    },
+    "related": ["network-003", "network-001"]
+  },
+  {
+    "id": "network-005",
+    "category": "network",
+    "level": 1,
+    "name": "ファイアウォール",
+    "explanation": "ファイアウォールは、ネットワークの境界で通信を検査し、許可した通信だけを通す仕組みです。不要な入口を閉じ、外からサーバへ届く接続を限定することで、攻撃の通り道を減らします。会社の玄関で入館証を確認する係のような役割です。設定を誤ると、必要な通信まで止めてしまうことがあります。",
+    "typingText": "a firewall allows only approved network traffic",
+    "quiz": {
+      "question": "ファイアウォールが通す通信はどれですか？",
+      "choices": ["許可した通信", "届いた通信のすべて", "暗号鍵そのもの", "紙に書いたメモ"],
+      "answerIndex": 0,
+      "explanation": "ファイアウォールは通信を検査し、許可した通信だけを通します。"
+    },
+    "related": ["network-001", "security-003"]
+  },
+  {
+    "id": "web-001",
+    "category": "web",
+    "level": 1,
+    "name": "HTML",
+    "explanation": "HTMLは、Webページの構造を書くためのマークアップ言語です。見出し、段落、リンク、画像など、文書の部品をタグで表します。見た目の色や余白はCSS、動きはJavaScriptが担当し、HTMLは何が書いてあるかを示します。ブラウザはこの構造を読んで画面に表示します。文章の骨組みをタグで表す言語です。",
+    "typingText": "HTML marks up the structure of a web page",
+    "quiz": {
+      "question": "HTMLが主に表すものは何ですか？",
+      "choices": ["サーバの購入契約", "通信の再送手順", "ページの構造", "パスワードのハッシュ"],
+      "answerIndex": 2,
+      "explanation": "HTMLは、見出しや段落などページの構造をタグで表す言語です。"
+    },
+    "related": ["web-002", "web-003"]
+  },
+  {
+    "id": "web-002",
+    "category": "web",
+    "level": 1,
+    "name": "CSS",
+    "explanation": "CSSは、HTMLで作ったページの見た目を指定する言語です。文字の色、大きさ、余白、横並びや中央寄せなどをルールとして書きます。同じHTMLでもCSSを変えると印象が大きく変わります。画面幅に応じてレイアウトを変えるレスポンシブデザインも、CSSのメディアクエリで実現することが多いです。",
+    "typingText": "CSS controls the color spacing and layout of a page",
+    "quiz": {
+      "question": "CSSが指定するものはどれですか？",
+      "choices": ["表の主キー", "ページの見た目", "秘密鍵の保管場所", "コミットの履歴"],
+      "answerIndex": 1,
+      "explanation": "CSSは、文字の色や余白など、HTMLで作ったページの見た目を指定します。"
+    },
+    "related": ["web-001"]
+  },
+  {
+    "id": "web-003",
+    "category": "web",
+    "level": 1,
+    "name": "API",
+    "explanation": "APIは、ソフトウェア同士が機能やデータをやり取りするための窓口です。たとえば天気アプリは、天気サービスのAPIに都市名を送り、気温や予報を受け取ります。画面の裏側で、決まった形式のリクエストとレスポンスを交換します。利用側は相手の内部実装を知らなくても、公開された約束に従って呼び出せます。",
+    "typingText": "an API is a doorway for programs to exchange data",
+    "quiz": {
+      "question": "APIは何のための窓口ですか？",
+      "choices": [
+        "ソフトウェア同士がデータをやり取りする",
+        "オフィスの入退室を記録する",
+        "紙のマニュアルを印刷する",
+        "画面の解像度を固定する"
+      ],
+      "answerIndex": 0,
+      "explanation": "APIは、ソフトウェア同士が機能やデータをやり取りするための窓口です。"
+    },
+    "related": ["web-005", "network-003"]
+  },
+  {
+    "id": "web-004",
+    "category": "web",
+    "level": 2,
+    "name": "Cookie",
+    "explanation": "Cookieは、ブラウザがサイトごとに保存する小さなデータです。ログイン状態を覚えておく、カートの中身を維持する、といった用途でサーバがセットします。次のリクエストに自動で付くため、サイトは同じ利用者だと認識できます。第三者による追跡にも使われることがあり、必要なものだけを扱うのが安全です。",
+    "typingText": "a cookie is small data the browser stores for a site",
+    "quiz": {
+      "question": "Cookieを保存するのはどれですか？",
+      "choices": ["データベースの主キー", "ロードバランサ", "公開鍵のペア", "ブラウザ"],
+      "answerIndex": 3,
+      "explanation": "Cookieは、ブラウザがサイトごとに保存する小さなデータです。"
+    },
+    "related": ["web-003", "security-003"]
+  },
+  {
+    "id": "web-005",
+    "category": "web",
+    "level": 2,
+    "name": "REST",
+    "explanation": "RESTは、WebのHTTPを使ってリソースを操作するAPIの設計スタイルです。利用者や記事などをURLで表し、取得はGET、作成はPOST、更新はPUTやPATCH、削除はDELETEのようにメソッドで意図を分けます。状態をサーバのセッションに寄せすぎず、各リクエストに必要な情報を含める形が基本です。",
+    "typingText": "REST uses HTTP methods to work with resources at URLs",
+    "quiz": {
+      "question": "RESTでリソースの取得に対応するHTTPメソッドはどれですか？",
+      "choices": ["POST", "DELETE", "GET", "ロールバック"],
+      "answerIndex": 2,
+      "explanation": "RESTでは、取得はGET、作成はPOSTのようにメソッドで操作の意図を分けます。"
+    },
+    "related": ["web-003", "network-003"]
+  },
+  {
+    "id": "database-001",
+    "category": "database",
+    "level": 1,
+    "name": "リレーショナルデータベース",
+    "explanation": "リレーショナルデータベースは、データを表に整理し、行と列で管理するデータベースです。表同士を共通の値で関連づけ、必要な列だけを組み合わせて取り出せます。顧客表と注文表を分けておくと、同じ顧客情報を注文のたびに重複して書かずに済みます。RDBやRDBMSと呼ばれることが多いです。",
+    "typingText": "a relational database stores data in related tables",
+    "quiz": {
+      "question": "リレーショナルデータベースがデータを整理する単位はどれですか？",
+      "choices": ["スタイルシート", "表（行と列）", "プロンプト", "ファイアウォール"],
+      "answerIndex": 1,
+      "explanation": "リレーショナルデータベースは、データを表に整理し、行と列で管理します。"
+    },
+    "related": ["database-002", "database-005"]
+  },
+  {
+    "id": "database-002",
+    "category": "database",
+    "level": 1,
+    "name": "SQL",
+    "explanation": "SQLは、リレーショナルデータベースに対してデータの取得や更新を指示する言語です。SELECTで行を取り出し、INSERTで追加、UPDATEで変更、DELETEで削除します。WHEREで条件を絞り、JOINで複数の表を結びつけます。データベース製品が違っても、基本的な書き方は共通している部分が多いです。",
+    "typingText": "SQL queries tables to read and change stored rows",
+    "quiz": {
+      "question": "SQLのSELECTが行うことはどれですか？",
+      "choices": ["行を取り出す", "通信を再送する", "画面の色を変える", "サーバを新しく買う"],
+      "answerIndex": 0,
+      "explanation": "SQLでは、SELECTで行を取り出し、INSERTやUPDATEやDELETEで中身を変えます。"
+    },
+    "related": ["database-001", "database-003"]
+  },
+  {
+    "id": "database-003",
+    "category": "database",
+    "level": 2,
+    "name": "インデックス",
+    "explanation": "インデックスは、検索を速くするための索引です。本の索引でページをすぐ開けるように、よく検索する列にインデックスを作ると、全行を順に見るより速く目的の行へたどり着けます。ただし追加や更新のときには索引も直すため、作りすぎると書き込みが遅くなることがあります。必要な検索に合わせて設計します。",
+    "typingText": "an index speeds up lookups like a book index",
+    "quiz": {
+      "question": "インデックスを作る主な目的は何ですか？",
+      "choices": [
+        "パスワードを公開する",
+        "通信を暗号化する",
+        "画面を中央寄せにする",
+        "検索を速くする"
+      ],
+      "answerIndex": 3,
+      "explanation": "インデックスは、よく検索する列から目的の行へ速くたどり着くための索引です。"
+    },
+    "related": ["database-002", "database-005"]
+  },
+  {
+    "id": "database-004",
+    "category": "database",
+    "level": 2,
+    "name": "トランザクション",
+    "explanation": "トランザクションは、複数の更新をひとまとまりとして扱い、全部成功するか全部なかったことにする仕組みです。銀行の振込で、引き落としだけ成功して入金が失敗する、という中途半端な状態を防ぎます。処理の途中で問題が起きたときはロールバックして元に戻します。まとめて確定することをコミットと呼びます。",
+    "typingText": "a transaction commits all updates or rolls them back",
+    "quiz": {
+      "question": "トランザクションの途中で問題が起きたとき、更新を元に戻すことを何と呼びますか？",
+      "choices": ["デプロイ", "プロンプト", "ロールバック", "クローン"],
+      "answerIndex": 2,
+      "explanation": "処理の途中で問題が起きたときは、ロールバックして更新を元に戻します。"
+    },
+    "related": ["database-002"]
+  },
+  {
+    "id": "database-005",
+    "category": "database",
+    "level": 1,
+    "name": "主キー",
+    "explanation": "主キーは、表の中で各行をただ一つに識別する列、または列の組み合わせです。同じ値を重複して登録できず、空にもできません。社員番号や注文番号のように、その行がどれかを確実に指せる値を選びます。他の表からこの行を参照するときにも、主キーの値が手がかりになります。",
+    "typingText": "a primary key uniquely identifies each row in a table",
+    "quiz": {
+      "question": "主キーの値について正しいものはどれですか？",
+      "choices": [
+        "空でも重複してもよい",
+        "各行を一つに識別し、重複も空も不可",
+        "見た目の余白を表す",
+        "通信の宛先ポートである"
+      ],
+      "answerIndex": 1,
+      "explanation": "主キーは各行をただ一つに識別し、同じ値の重複も空も許しません。"
+    },
+    "related": ["database-001", "database-002"]
+  },
+  {
+    "id": "dev-001",
+    "category": "dev",
+    "level": 1,
+    "name": "Git",
+    "explanation": "Gitは、ファイルの変更履歴を記録する分散バージョン管理システムです。誰がいつ何を変えたかを追えるので、不具合の前の状態へ戻したり、複数人の作業をあとから統合したりできます。自分のPCに履歴のコピーを持つため、ネットがなくても記録までの作業を進められます。開発の基礎ツールとして広く使われています。",
+    "typingText": "Git records file history so changes can be reviewed",
+    "quiz": {
+      "question": "Gitが記録するものは何ですか？",
+      "choices": ["ファイルの変更履歴", "画面のテーマカラー", "利用者の指紋", "サーバ室の温度"],
+      "answerIndex": 0,
+      "explanation": "Gitは、ファイルの変更履歴を記録する分散バージョン管理システムです。"
+    },
+    "related": ["dev-004", "dev-003"]
+  },
+  {
+    "id": "dev-002",
+    "category": "dev",
+    "level": 2,
+    "name": "CI",
+    "explanation": "CI（継続的インテグレーション）は、変更を共有の保管場所へ入れるたびに、ビルドやテストを自動で実行するやり方です。壊れたコードを早く見つけ、手元だけ動く状態が長く残るのを防ぎます。プッシュやプルリクエストをきっかけに検査を走らせるのが一般的です。人の確認より前に、機械的な検査を通します。",
+    "typingText": "CI automatically builds and tests each shared change",
+    "quiz": {
+      "question": "CIが変更を共有したときに自動で実行するものはどれですか？",
+      "choices": ["オフィスの施錠", "紙の請求書の印刷", "ビルドやテスト", "パスワードの口頭共有"],
+      "answerIndex": 2,
+      "explanation": "CIは、変更を共有するたびにビルドやテストを自動で実行するやり方です。"
+    },
+    "related": ["dev-003", "dev-005"]
+  },
+  {
+    "id": "dev-003",
+    "category": "dev",
+    "level": 1,
+    "name": "プルリクエスト",
+    "explanation": "プルリクエストは、自分の変更を本体のブランチへ取り込んでもらうための提案です。差分と説明を添えてレビューを依頼し、指摘に応じて修正します。会話が記録に残るので、なぜその変更をしたかを後から読めます。承認されてからマージするチームが多く、品質と知識の共有に使われます。",
+    "typingText": "a pull request proposes changes for review before merge",
+    "quiz": {
+      "question": "プルリクエストで依頼することはどれですか？",
+      "choices": [
+        "サーバの電源を切ること",
+        "変更をレビューして取り込んでもらうこと",
+        "IPアドレスを廃止すること",
+        "主キーを空にすること"
+      ],
+      "answerIndex": 1,
+      "explanation": "プルリクエストは、変更をレビューし本体へ取り込んでもらうための提案です。"
+    },
+    "related": ["dev-001", "dev-004"]
+  },
+  {
+    "id": "dev-004",
+    "category": "dev",
+    "level": 1,
+    "name": "リポジトリ",
+    "explanation": "リポジトリは、ソースコードとGitの変更履歴をまとめて保管する場所です。プロジェクトごとに一つ用意し、リモートのリポジトリをチームの正本にすることが多いです。クローンすると、その履歴を自分のPCへコピーして作業を始められます。課題管理やプルリクエストと一緒に、開発の拠点になります。",
+    "typingText": "a repository stores source code and its change history",
+    "quiz": {
+      "question": "リポジトリにまとめて保管するものはどれですか？",
+      "choices": [
+        "食堂のメニュー",
+        "画面揺れの強さだけ",
+        "秘密鍵の印刷物",
+        "ソースコードと変更履歴"
+      ],
+      "answerIndex": 3,
+      "explanation": "リポジトリは、ソースコードとGitの変更履歴をまとめて保管する場所です。"
+    },
+    "related": ["dev-001", "dev-003"]
+  },
+  {
+    "id": "dev-005",
+    "category": "dev",
+    "level": 1,
+    "name": "デプロイ",
+    "explanation": "デプロイは、開発したアプリや修正を、利用者が触る環境へ配置して使えるようにする作業です。テスト環境へ出して確認し、問題がなければ本番環境へ反映する、という段階を踏むことが多いです。配置するだけでなく、設定やデータベースの更新が伴う場合もあります。手順を自動化しておくと、作業の抜けを減らせます。",
+    "typingText": "deploy places an app where users can run it",
+    "quiz": {
+      "question": "デプロイが目指す状態はどれですか？",
+      "choices": [
+        "アプリを利用者が触る環境で使えるようにする",
+        "学習データを捨てる",
+        "索引をすべて削除する",
+        "通信の確認応答を止める"
+      ],
+      "answerIndex": 0,
+      "explanation": "デプロイは、アプリや修正を利用者が触る環境へ配置して使えるようにする作業です。"
+    },
+    "related": ["dev-002", "cloud-003"]
+  }
+]
