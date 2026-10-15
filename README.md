@@ -5,7 +5,7 @@
 
 新人エンジニアがスマートフォンで数分、IT の基礎用語を読んで、打って、クイズで覚える学習アプリ。
 
-対応ブラウザは macOS Chrome（現行安定版）のみです。他の OS・ブラウザでの動作確認は行っていません。
+対応ブラウザは macOS Chrome（現行安定版）と iPhone Chrome（iOS 現行版）です。Windows / Android / iPad / Safari / Edge での動作確認は行っていません。
 
 ## 起動方法
 
