@@ -5,6 +5,7 @@ import {
   type Settings,
   type UserProgress,
 } from "../types/game";
+import type { TermProgress } from "../types/term";
 
 /**
  * アプリシェルが設定・進捗の読み書きに使う最小インターフェース（docs/spec.md §2.1）。
@@ -17,14 +18,25 @@ export interface AppStorage {
   putProgress(progress: UserProgress): Promise<void>;
   /** 当日のデイリーミッション進捗（§8.2）。未実装・未保存なら undefined */
   getMission?(dateKey: string): Promise<DailyMissionProgress | undefined>;
+  /** 用語の学習記録。termId 昇順 */
+  listTermProgress(): Promise<TermProgress[]>;
+  /** 学習記録をこの配列で置き換える */
+  putTermProgress(records: readonly TermProgress[]): Promise<void>;
 }
 
 /** テストやストレージ未接続時に使うメモリ実装 */
 export function createMemoryStorage(
-  initial: { settings?: Partial<Settings>; progress?: Partial<UserProgress> } = {},
+  initial: {
+    settings?: Partial<Settings>;
+    progress?: Partial<UserProgress>;
+    termProgress?: readonly TermProgress[];
+  } = {},
 ): AppStorage {
   let settings: Settings = { ...DEFAULT_SETTINGS, ...initial.settings };
   let progress: UserProgress = { ...DEFAULT_PROGRESS, ...initial.progress };
+  let termProgress: TermProgress[] = (initial.termProgress ?? []).map((row) => ({ ...row }));
+  const listTermProgress = async () =>
+    termProgress.map((row) => ({ ...row })).sort((a, b) => a.termId.localeCompare(b.termId));
   return {
     getSettings: async () => settings,
     putSettings: async (next) => {
@@ -35,5 +47,9 @@ export function createMemoryStorage(
       progress = next;
     },
     getMission: async () => undefined,
+    listTermProgress,
+    putTermProgress: async (records) => {
+      termProgress = records.map((row) => ({ ...row }));
+    },
   };
 }

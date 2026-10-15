@@ -1,5 +1,39 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { needsExplicitFileSave, shareOrDownloadFile, triggerFileDownload } from "./fileTransfer";
+import { DEFAULT_PROGRESS, DEFAULT_SETTINGS, EXPORT_VERSION, type ExportData } from "../types/game";
+import {
+  createLearningDataFile,
+  needsExplicitFileSave,
+  serializeLearningData,
+  shareOrDownloadFile,
+  triggerFileDownload,
+} from "./fileTransfer";
+
+describe("serializeLearningData", () => {
+  it("includes term progress in the export file", () => {
+    const data: ExportData = {
+      version: EXPORT_VERSION,
+      exportedAt: "2026-10-14T09:00:00.000Z",
+      progress: DEFAULT_PROGRESS,
+      sessions: [],
+      questionStats: [],
+      settings: DEFAULT_SETTINGS,
+      termProgress: [
+        {
+          termId: "ai-001",
+          seenCount: 1,
+          quizCorrect: 1,
+          quizIncorrect: 0,
+          lastStudiedAt: "2026-10-14T09:00:00.000Z",
+        },
+      ],
+    };
+    const parsed = JSON.parse(serializeLearningData(data)) as ExportData;
+    expect(parsed.termProgress).toEqual(data.termProgress);
+    const file = createLearningDataFile(data, "typoria-export-20261014.json");
+    expect(file.name).toBe("typoria-export-20261014.json");
+    expect(file.type).toBe("application/json");
+  });
+});
 
 describe("needsExplicitFileSave", () => {
   afterEach(() => {

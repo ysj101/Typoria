@@ -15,8 +15,9 @@ import {
   type Settings,
   type UserProgress,
 } from "../types/game";
+import { isTermProgress, type TermProgress } from "../types/term";
 
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const PROGRESS_KEY = "progress";
 const SETTINGS_KEY = "settings";
 
@@ -30,9 +31,17 @@ interface TyporiaSchema extends DBSchema {
   settings: { key: string; value: Settings };
   questionStats: { key: string; value: QuestionStat };
   dailyMissions: { key: string; value: DailyMissionProgress };
+  termProgress: { key: string; value: TermProgress };
 }
 
-const STORES = ["sessions", "progress", "settings", "questionStats", "dailyMissions"] as const;
+const STORES = [
+  "sessions",
+  "progress",
+  "settings",
+  "questionStats",
+  "dailyMissions",
+  "termProgress",
+] as const;
 
 export interface TyporiaDatabase {
   saveSession(session: GameSession): Promise<void>;
@@ -47,6 +56,10 @@ export interface TyporiaDatabase {
   bulkPutQuestionStats(stats: QuestionStat[]): Promise<void>;
   getMission(dateKey: string): Promise<DailyMissionProgress | undefined>;
   putMission(mission: DailyMissionProgress): Promise<void>;
+  /** termId 昇順 */
+  listTermProgress(): Promise<TermProgress[]>;
+  /** 学習記録をこの配列で置き換える */
+  putTermProgress(records: readonly TermProgress[]): Promise<void>;
   exportData(now?: () => Date): Promise<ExportData>;
   /** 検証に失敗した場合は ImportError を投げ、既存データを変更しない */
   importData(json: unknown): Promise<void>;
@@ -146,6 +159,13 @@ export function validateExportData(json: unknown): ValidationResult {
     return { ok: false, error: "questionStats が不正です" };
   }
   if (!isSettings(json.settings)) return { ok: false, error: "settings が不正です" };
+  let termProgress: TermProgress[] = [];
+  if (json.termProgress !== undefined) {
+    if (!Array.isArray(json.termProgress) || !json.termProgress.every(isTermProgress)) {
+      return { ok: false, error: "termProgress が不正です" };
+    }
+    termProgress = json.termProgress;
+  }
   return {
     ok: true,
     data: {
@@ -155,6 +175,7 @@ export function validateExportData(json: unknown): ValidationResult {
       sessions: json.sessions,
       questionStats: json.questionStats,
       settings: json.settings,
+      termProgress,
     },
   };
 }
@@ -167,13 +188,18 @@ export function openDatabase(name = "typoria"): TyporiaDatabase {
 
   const open = () => {
     dbPromise ??= openDB<TyporiaSchema>(name, DB_VERSION, {
-      upgrade(db) {
-        const sessions = db.createObjectStore("sessions", { keyPath: "id" });
-        sessions.createIndex("startedAt", "startedAt");
-        db.createObjectStore("progress");
-        db.createObjectStore("settings");
-        db.createObjectStore("questionStats", { keyPath: "questionId" });
-        db.createObjectStore("dailyMissions", { keyPath: "dateKey" });
+      upgrade(db, oldVersion) {
+        if (oldVersion < 1) {
+          const sessions = db.createObjectStore("sessions", { keyPath: "id" });
+          sessions.createIndex("startedAt", "startedAt");
+          db.createObjectStore("progress");
+          db.createObjectStore("settings");
+          db.createObjectStore("questionStats", { keyPath: "questionId" });
+          db.createObjectStore("dailyMissions", { keyPath: "dateKey" });
+        }
+        if (oldVersion < 2 && !db.objectStoreNames.contains("termProgress")) {
+          db.createObjectStore("termProgress", { keyPath: "termId" });
+        }
       },
     });
     return dbPromise;
@@ -184,6 +210,10 @@ export function openDatabase(name = "typoria"): TyporiaDatabase {
   const getSettings = async (): Promise<Settings> => {
     const stored = await (await open()).get("settings", SETTINGS_KEY);
     return { ...DEFAULT_SETTINGS, ...stored };
+  };
+  const listTermProgress = async () => {
+    const rows = await (await open()).getAll("termProgress");
+    return rows.sort((a, b) => a.termId.localeCompare(b.termId));
   };
   const listSessions = async ({ limit }: { limit?: number } = {}) => {
     const db = await open();
@@ -225,6 +255,12 @@ export function openDatabase(name = "typoria"): TyporiaDatabase {
     async putMission(mission) {
       await (await open()).put("dailyMissions", mission);
     },
+    listTermProgress,
+    async putTermProgress(records) {
+      const tx = (await open()).transaction("termProgress", "readwrite");
+      const clear = tx.store.clear();
+      await Promise.all([clear, ...records.map((row) => tx.store.put({ ...row })), tx.done]);
+    },
     async exportData(now = () => new Date()) {
       const db = await open();
       return {
@@ -234,6 +270,7 @@ export function openDatabase(name = "typoria"): TyporiaDatabase {
         sessions: await listSessions(),
         questionStats: await db.getAll("questionStats"),
         settings: await getSettings(),
+        termProgress: await listTermProgress(),
       };
     },
     async importData(json) {
@@ -247,6 +284,7 @@ export function openDatabase(name = "typoria"): TyporiaDatabase {
         tx.objectStore("progress").put(data.progress, PROGRESS_KEY),
         tx.objectStore("settings").put(data.settings, SETTINGS_KEY),
         ...data.questionStats.map((s) => tx.objectStore("questionStats").put(s)),
+        ...data.termProgress.map((row) => tx.objectStore("termProgress").put(row)),
         tx.done,
       ]);
     },

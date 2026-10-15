@@ -2,6 +2,7 @@
  * Typoria のデータモデル・状態・設定・定数の定義。
  * 仕様: docs/spec.md §12 データモデル、§13.1 状態遷移、§4.5 設定、§7.3 苦手問題、§8.2 デイリーミッション
  */
+import type { TermProgress } from "./term";
 
 /** 難易度（§7.1） */
 export type Difficulty = "easy" | "normal" | "hard";
@@ -164,7 +165,7 @@ export interface DailyMissionProgress {
 /** エクスポート JSON の version（§12.4） */
 export const EXPORT_VERSION = 1;
 
-/** エクスポート JSON の envelope（§12.4） */
+/** エクスポート JSON の envelope（§12.4）。`termProgress` は用語の学習記録 */
 export interface ExportData {
   version: number;
   /** ISO 8601 */
@@ -173,6 +174,8 @@ export interface ExportData {
   sessions: GameSession[];
   questionStats: QuestionStat[];
   settings: Settings;
+  /** 無い古い書き出しは空として読む */
+  termProgress: TermProgress[];
 }
 
 // ---- ゲーム定数 -------------------------------------------------------------

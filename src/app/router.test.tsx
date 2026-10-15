@@ -24,6 +24,7 @@ describe("routing (§4)", () => {
     [ROUTES.home, "Typoria"],
     [ROUTES.game, "Game"],
     [ROUTES.learn, "IT基礎用語"],
+    [ROUTES.glossary, "用語帳"],
     // Result は route state が無いとホームへリダイレクトする（#18）
     [ROUTES.result, "Typoria"],
     [ROUTES.history, "History"],

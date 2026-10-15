@@ -13,8 +13,14 @@ test.describe("learn round", () => {
     await page.getByRole("button", { name: "IT用語を学ぶ" }).click();
     await expect(page).toHaveURL(/#\/learn$/);
     await expect(page.getByRole("heading", { name: "IT基礎用語" })).toBeVisible();
+    await expect(page.getByRole("button", { name: /おまかせ/ })).toBeVisible();
+    await expectNoHorizontalScroll(page);
+    await expectNoSeriousViolations(page, "Category select");
+    await page.getByRole("button", { name: /おまかせ/ }).click();
+    await expect(page).toHaveURL(/#\/learn\/round$/);
 
     const names: string[] = [];
+    const termIds: string[] = [];
     for (let i = 0; i < 3; i += 1) {
       const learn = page.getByTestId("learn");
       await expect(learn).toHaveAttribute("data-phase", "reading");
@@ -24,6 +30,7 @@ test.describe("learn round", () => {
       const explanationText = (await explanation.textContent()) ?? "";
       expect(explanationText.length).toBeGreaterThan(0);
       names.push((await page.getByTestId("learn-name").textContent()) ?? "");
+      termIds.push((await learn.getAttribute("data-term-id")) ?? "");
 
       await page.getByRole("button", { name: "打つ" }).click();
       await expect(learn).toHaveAttribute("data-phase", "typing");
@@ -98,6 +105,20 @@ test.describe("learn round", () => {
     await page.getByRole("button", { name: "ホームへ" }).click();
     await expect(page).toHaveURL(/#\/$/);
     await expect(page.getByRole("button", { name: "PLAY" })).toBeVisible();
+
+    await page.reload();
+    await page.getByRole("button", { name: "IT用語を学ぶ" }).click();
+    await page.getByRole("link", { name: "用語帳" }).click();
+    await expect(page.getByRole("heading", { name: "用語帳" })).toBeVisible();
+    const studied = page.locator(`[data-testid=glossary-term][data-term-id="${termIds[0]}"]`);
+    await expect(studied).toHaveAttribute("data-status", /learning|mastered/);
+    await studied.click();
+    await expect(page.getByTestId("glossary-explanation")).not.toBeEmpty();
+    await page.reload();
+    await expect(page.getByRole("heading", { name: "用語帳" })).toBeVisible();
+    await expect(studied).toHaveAttribute("data-status", /learning|mastered/);
+    await expectNoHorizontalScroll(page);
+    await expectNoSeriousViolations(page, "Glossary");
   });
 
   test("keeps the explanation and typing target inside a short visual viewport", async ({
@@ -106,6 +127,7 @@ test.describe("learn round", () => {
     await page.setViewportSize({ width: 390, height: 360 });
     await page.goto("/");
     await page.getByRole("button", { name: "IT用語を学ぶ" }).click();
+    await page.getByRole("button", { name: /おまかせ/ }).click();
     await page.getByRole("button", { name: "打つ" }).click();
     await expect(page.getByTestId("learn")).toHaveAttribute("data-phase", "typing");
     await expect(page.getByTestId("learn")).toHaveAttribute("data-compact", "true");
@@ -160,6 +182,7 @@ test.describe("learn round", () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
     await page.getByRole("button", { name: "IT用語を学ぶ" }).click();
+    await page.getByRole("button", { name: /おまかせ/ }).click();
     await expect(page.getByTestId("learn")).toHaveAttribute("data-phase", "reading");
 
     const explanation = page.getByTestId("learn-explanation");
@@ -204,5 +227,24 @@ test.describe("learn round", () => {
     await expect(page.getByRole("button", { name: "やめる" })).toBeInViewport();
     await expectNoHorizontalScroll(page);
     await expectNoSeriousViolations(page, "Learn typing keyboard");
+  });
+});
+
+test.describe("category progress at 360px", () => {
+  test.use({ viewport: { width: 360, height: 740 } });
+
+  test("category select and glossary have no horizontal scroll and no serious axe violations", async ({
+    page,
+  }) => {
+    await page.goto("/#/learn");
+    await expect(page.getByRole("heading", { name: "IT基礎用語" })).toBeVisible();
+    await expect(page.getByRole("button", { name: /データベース/ })).toBeVisible();
+    await expectNoHorizontalScroll(page);
+    await expectNoSeriousViolations(page, "Category select 360");
+
+    await page.getByRole("link", { name: "用語帳" }).click();
+    await expect(page.getByRole("heading", { name: "用語帳" })).toBeVisible();
+    await expectNoHorizontalScroll(page);
+    await expectNoSeriousViolations(page, "Glossary 360");
   });
 });

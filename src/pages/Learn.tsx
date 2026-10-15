@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import type React from "react";
-import { useAppNavigate } from "../app/navigation";
+import { useAppNavigate, useLearnRoundStart } from "../app/navigation";
+import { useAppContext } from "../app/useAppContext";
 import { selectTerms, TERMS } from "../data/terms";
 import { LearnQuizView } from "../components/LearnQuizView";
 import {
@@ -29,6 +30,12 @@ import {
   requestQuiz,
   type LearnRoundState,
 } from "../game/learnRound";
+import {
+  applyQuizResult,
+  applyTermsSeen,
+  enqueueTermProgressUpdate,
+  selectOmakaseTerms,
+} from "../game/termProgress";
 import type { TypingState } from "../game/typing";
 import { isKeyboardChromeTarget, useKeyboard } from "../hooks/useKeyboard";
 import { useVisualViewport } from "../hooks/useVisualViewport";
@@ -36,59 +43,94 @@ import { TERM_CATEGORY_LABELS, type Term } from "../types/term";
 import "./Learn.css";
 
 export interface LearnProps {
-  /** 未指定なら全カテゴリから既定の 3 語 */
+  /** 未指定なら route state のカテゴリ、またはおまかせ */
   terms?: readonly Term[];
-  /** 理解度クイズの出題と選択肢シャッフル。未指定は Math.random */
+  /** 出題用語の選択、理解度クイズの出題と選択肢シャッフル。未指定は Math.random */
   rng?: () => number;
   /** クイズの回答時刻。未指定は現在時刻 */
   now?: () => Date;
 }
 
-function createInitialSession(terms: readonly Term[] | undefined): LearnResumeSession {
-  const catalog = terms ?? TERMS;
+/** 中断スナップショットがあれば復元する。復元できないスナップショットは捨てる */
+function restoreSession(catalog: readonly Term[]): LearnResumeSession | null {
   const saved = loadLearnResume();
-  if (saved) {
-    const restored = restoreLearnSession(saved, catalog);
-    if (restored) return restored;
-    clearLearnResume();
-  }
-  return { round: createLearnRound(terms ?? selectTerms()), quiz: null };
+  if (!saved) return null;
+  const restored = restoreLearnSession(saved, catalog);
+  if (!restored) clearLearnResume();
+  return restored;
 }
 
 /**
- * 学習モード（#74 / #75 / #77）。
+ * 学習モード（#74 / #75 / #76 / #77）。
  * 1 ラウンドは「解説を読む → typingText を打つ」を既定 3 語くり返し、
- * ラウンド終了後に理解度クイズへ進む。
+ * ラウンド終了後に理解度クイズへ進む。読んだ用語とクイズの正誤は学習記録に残す。
  * タブの切り替えや画面ロックでは、同じ用語・同じフェーズから再開する。
  */
 export function Learn({ terms, rng, now }: LearnProps) {
   const nav = useAppNavigate();
+  const { storage } = useAppContext();
+  const start = useLearnRoundStart();
+  const category = start.mode === "category" ? start.category : null;
   const { compact, inset } = useVisualViewport();
-  const [initial] = useState(() => createInitialSession(terms));
-  const [round, setRound] = useState<LearnRoundState>(initial.round);
-  const [quiz, setQuiz] = useState<LearnQuizState | null>(initial.quiz);
+  const [initial] = useState<LearnResumeSession | null>(
+    () =>
+      restoreSession(terms ?? TERMS) ??
+      (terms ? { round: createLearnRound(terms), quiz: null } : null),
+  );
+  const [round, setRound] = useState<LearnRoundState | null>(initial?.round ?? null);
+  const [quiz, setQuiz] = useState<LearnQuizState | null>(initial?.quiz ?? null);
   const containerRef = useRef<HTMLElement>(null);
   const typingInputRef = useRef<HTMLInputElement>(null);
   const beginButtonRef = useRef<HTMLButtonElement>(null);
   const quizButtonRef = useRef<HTMLButtonElement>(null);
   const answerRef = useRef<HTMLParagraphElement>(null);
 
+  // 用語が決まっていなければ、カテゴリ指定か学習記録に基づくおまかせで選ぶ
+  useEffect(() => {
+    if (initial) return;
+    let cancelled = false;
+    void (async () => {
+      const progress = category ? [] : await storage.listTermProgress();
+      if (cancelled) return;
+      const picked = category
+        ? selectTerms({ category, rng })
+        : selectOmakaseTerms({ progress, rng });
+      setRound(createLearnRound(picked));
+      setQuiz(null);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [initial, category, storage, rng]);
+
+  // ラウンド終了は round にとって終端なので、この effect は roundEnd に入ったとき 1 回だけ走る
+  useEffect(() => {
+    if (round?.phase !== "roundEnd") return;
+    const termIds = round.terms.map((term) => term.id);
+    const studiedAt = (now ? now() : new Date()).toISOString();
+    void enqueueTermProgressUpdate(storage, (current) =>
+      applyTermsSeen(current, termIds, studiedAt),
+    );
+  }, [round, storage, now]);
+
   const focusTypingInput = useCallback(() => {
     typingInputRef.current?.focus({ preventScroll: true });
   }, []);
 
   const onBeginTyping = useCallback(() => {
-    setRound((current) => beginTyping(current));
+    setRound((current) => current && beginTyping(current));
     // iOS Chrome はユーザー操作の同期処理でしかソフトキーボードを出さない（#59）
     focusTypingInput();
   }, [focusTypingInput]);
 
   const onChar = useCallback((char: string) => {
-    setRound((current) => inputLearnChar(current, char).state);
+    setRound((current) => current && inputLearnChar(current, char).state);
   }, []);
 
+  const typing = round?.phase === "typing";
+
   useKeyboard({
-    enabled: round.phase === "typing",
+    enabled: typing,
     onChar,
     target: containerRef,
     textInput: typingInputRef,
@@ -96,35 +138,34 @@ export function Learn({ terms, rng, now }: LearnProps) {
 
   // 進行状態を常に残し、タブ切り替え・画面ロック・戻る操作のどれからでも同じ所へ戻す
   useEffect(() => {
-    saveLearnResume(captureLearnResume(round, quiz));
+    if (round) saveLearnResume(captureLearnResume(round, quiz));
   }, [round, quiz]);
 
   useEffect(() => {
-    if (round.phase === "typing") return;
+    if (typing) return;
     if (document.activeElement === typingInputRef.current) {
       typingInputRef.current?.blur();
     }
-  }, [round.phase]);
+  }, [typing]);
 
   useEffect(() => {
-    if (quiz) return;
+    if (!round || quiz) return;
     if (round.phase === "reading") beginButtonRef.current?.focus();
     if (round.phase === "roundEnd") quizButtonRef.current?.focus();
     if (round.phase === "typing") focusTypingInput();
-  }, [quiz, round.phase, round.index, focusTypingInput]);
+  }, [quiz, round, focusTypingInput]);
 
-  const typing = round.phase === "typing";
-  const collapsed = shouldCollapseLearnExplanation(round.phase, {
-    short: compact,
-    keyboardInset: inset,
-  });
+  const collapsed =
+    round !== null &&
+    shouldCollapseLearnExplanation(round.phase, { short: compact, keyboardInset: inset });
 
   useEffect(() => {
     if (!typing) return;
     const node = answerRef.current;
     if (!node || typeof node.scrollIntoView !== "function") return;
     node.scrollIntoView({ block: "nearest", inline: "nearest" });
-  }, [typing, round.index, collapsed]);
+  }, [typing, round?.index, collapsed]);
+
   const keepSoftKeyboard = useCallback(
     (event: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>) => {
       if (!typing || isKeyboardChromeTarget(event.target)) return;
@@ -138,23 +179,42 @@ export function Learn({ terms, rng, now }: LearnProps) {
     clearLearnResume();
     nav.toHome();
   };
+  const onQuiz = () => {
+    const next = round && requestQuiz(round);
+    if (next) setQuiz(createLearnQuiz(next.handoff.terms, { rng }));
+  };
+  const onAnswer = (sourceIndex: QuizChoiceIndex) => {
+    if (!quiz || quiz.phase !== "asking") return;
+    const next = answerLearnQuiz(quiz, sourceIndex, now);
+    setQuiz(next);
+    const quizResult = next.result;
+    if (quizResult) {
+      void enqueueTermProgressUpdate(storage, (current) => applyQuizResult(current, quizResult));
+    }
+  };
+  const onLearnResult = () => {
+    if (!round || !quiz?.result) return;
+    clearLearnResume();
+    nav.toLearnResult(createLearnRoundResult(round.terms, quiz.result));
+  };
+
+  if (!round) {
+    return (
+      <section
+        aria-label="学習ラウンド"
+        className={`learn-screen outline-none${compact ? " learn-screen--compact" : ""}`}
+        data-testid="learn"
+        data-phase="loading"
+      >
+        <p className="text-subtext">読み込み中</p>
+      </section>
+    );
+  }
+
   const term = currentTerm(round);
   const phase = quiz ? "quiz" : round.phase;
   const progressCurrent = round.phase === "roundEnd" ? round.terms.length : round.index + 1;
   const progressTotal = round.terms.length;
-  const onQuiz = () => {
-    const next = requestQuiz(round);
-    if (!next) return;
-    setQuiz(createLearnQuiz(next.handoff.terms, { rng }));
-  };
-  const onAnswer = (sourceIndex: QuizChoiceIndex) => {
-    setQuiz((current) => (current ? answerLearnQuiz(current, sourceIndex, now) : current));
-  };
-  const onLearnResult = () => {
-    if (!quiz?.result) return;
-    clearLearnResume();
-    nav.toLearnResult(createLearnRoundResult(round.terms, quiz.result));
-  };
 
   return (
     <section
@@ -358,14 +418,14 @@ function RoundEnd({
         data-testid="learn-to-quiz"
         data-next-phase="quiz"
         onClick={onQuiz}
-        className="learn-tap rounded-full bg-perfect px-8 py-3 font-bold text-bg focus-visible:ring-4 focus-visible:ring-fever"
+        className="rounded-full bg-perfect px-8 py-3 font-bold text-bg focus-visible:ring-4 focus-visible:ring-fever"
       >
         理解度クイズへ
       </button>
       <button
         type="button"
         onClick={onHome}
-        className="learn-tap rounded-full border border-subtext px-8 py-3 text-subtext hover:text-text"
+        className="rounded-full border border-subtext px-8 py-3 text-subtext hover:text-text"
       >
         ホームへ戻る
       </button>
