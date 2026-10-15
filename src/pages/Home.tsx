@@ -13,9 +13,6 @@ const DIFFICULTY_LABEL: Record<Difficulty, string> = {
   hard: "Hard",
 };
 
-/** ホームで示す学習ループ（読む → 打つ → クイズ） */
-const LEARNING_STEPS = ["読む", "打つ", "クイズ"] as const;
-
 /** ホーム画面（docs/spec.md §4.1, §8） */
 export function Home() {
   const nav = useAppNavigate();
@@ -55,17 +52,13 @@ export function Home() {
         <p className="text-balance text-sm leading-snug text-subtext sm:text-base">
           1 回 3 分。IT の基礎用語を読んで、打って、覚える。
         </p>
-        <ol aria-label="学習の流れ" className="flex items-center text-sm font-bold">
-          {LEARNING_STEPS.map((step, index) => (
-            <li key={step} className="flex items-center">
-              {index > 0 && (
-                <span aria-hidden="true" className="px-2 font-normal text-subtext">
-                  →
-                </span>
-              )}
-              {step}
-            </li>
-          ))}
+        <ol
+          aria-label="学習の流れ"
+          className="flex items-center text-sm font-bold [&>li+li]:before:px-2 [&>li+li]:before:font-normal [&>li+li]:before:text-subtext [&>li+li]:before:content-['→']"
+        >
+          <li>読む</li>
+          <li>打つ</li>
+          <li>クイズ</li>
         </ol>
       </header>
 

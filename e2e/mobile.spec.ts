@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expectNoHorizontalScroll } from "./helpers";
 
 /**
  * スマホ Chrome 固有の受け入れ（#61）。
@@ -58,13 +59,6 @@ test.describe("mobile chrome", () => {
     await expectMainTapTargets(page);
   });
 });
-
-async function expectNoHorizontalScroll(page: Page) {
-  const fits = await page.evaluate(
-    () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
-  );
-  expect(fits).toBe(true);
-}
 
 async function expectNoHorizontalScrollOnScreens(page: Page) {
   await page.goto("/");

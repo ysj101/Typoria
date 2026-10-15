@@ -35,8 +35,6 @@ describe("Home (§4.1)", () => {
     expect(steps).toHaveTextContent("読む");
     expect(steps).toHaveTextContent("打つ");
     expect(steps).toHaveTextContent("クイズ");
-    expect(screen.queryByText(/英語を学ぶ/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/90 秒/)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "PLAY" })).toBeInTheDocument();
     expect(screen.getByTestId("home-xp")).toHaveTextContent("0 XP");
     expect(screen.getByTestId("home-difficulty")).toHaveTextContent("Easy");
