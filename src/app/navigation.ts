@@ -6,6 +6,7 @@ import type { DailyMissionId, Difficulty, GameSession } from "../types/game";
 export const ROUTES = {
   home: "/",
   game: "/game",
+  learn: "/learn",
   result: "/result",
   history: "/history",
   settings: "/settings",
@@ -25,6 +26,7 @@ export function useAppNavigate() {
   const navigate = useNavigate();
   const toHome = useCallback(() => navigate(ROUTES.home), [navigate]);
   const toGame = useCallback(() => navigate(ROUTES.game), [navigate]);
+  const toLearn = useCallback(() => navigate(ROUTES.learn), [navigate]);
   const toResult = useCallback(
     (payload: ResultPayload) => navigate(ROUTES.result, { state: payload, replace: true }),
     [navigate],
@@ -32,8 +34,8 @@ export function useAppNavigate() {
   const toHistory = useCallback(() => navigate(ROUTES.history), [navigate]);
   const toSettings = useCallback(() => navigate(ROUTES.settings), [navigate]);
   return useMemo(
-    () => ({ toHome, toGame, toResult, toHistory, toSettings }),
-    [toHome, toGame, toResult, toHistory, toSettings],
+    () => ({ toHome, toGame, toLearn, toResult, toHistory, toSettings }),
+    [toHome, toGame, toLearn, toResult, toHistory, toSettings],
   );
 }
 

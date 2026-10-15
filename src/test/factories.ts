@@ -1,4 +1,25 @@
 import type { GameSession, QuestionResult } from "../types/game";
+import type { Term, TermCategory } from "../types/term";
+
+/** テスト用の Term ファクトリ。category は id の接頭辞から導く */
+export function makeTerm(id: string, overrides: Partial<Omit<Term, "id">> = {}): Term {
+  const name = overrides.name ?? id;
+  return {
+    id,
+    category: id.slice(0, id.lastIndexOf("-")) as TermCategory,
+    level: 1,
+    name,
+    explanation: `${name}の解説。画面の上に残る文章です。`,
+    typingText: "sample term explains one idea",
+    quiz: {
+      question: "質問",
+      choices: ["A", "B", "C", "D"],
+      answerIndex: 0,
+      explanation: "解説",
+    },
+    ...overrides,
+  };
+}
 
 /** テスト用の QuestionResult ファクトリ */
 export function makeQuestionResult(overrides: Partial<QuestionResult> = {}): QuestionResult {

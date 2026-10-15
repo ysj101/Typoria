@@ -5,6 +5,14 @@
  */
 import { useEffect, useLayoutEffect, useRef, type RefObject } from "react";
 
+/** ボタンやダイアログ上のタップでは、ソフトキーボード用 input へフォーカスを移さない */
+export function isKeyboardChromeTarget(target: EventTarget | null): boolean {
+  return (
+    target instanceof Element &&
+    Boolean(target.closest("button, a, textarea, select, [role='dialog']"))
+  );
+}
+
 export type KeyAction =
   { type: "char"; char: string } | { type: "skip" } | { type: "pause" } | { type: "ignore" };
 
