@@ -14,6 +14,16 @@ pnpm install
 pnpm dev
 ```
 
+`pnpm install` の `prepare` が `core.hooksPath` を `.githooks` に設定します。
+commit-msg フックは `@gmail.com` を含む行を大文字・小文字を区別せず削除し、削除した行番号を表示します。
+作成者またはコミッターのメールアドレスに同じ文字列が含まれる場合はコミットを拒否します。
+GitHub の noreply アドレスなどを使用してください。
+
+ローカルでコミットのメールアドレスとメッセージを検査するには、`sh scripts/check-no-gmail.sh origin/main..HEAD` を実行します。
+範囲は第1引数で変更できます。`PR_TITLE` と `PR_BODY` を環境変数に渡すと、PR のタイトルと本文も検査します。
+GitHub Actions は PR と `main` 以外への push で同じスクリプトを実行します。
+ファイル内容は検査しません。
+
 ## スクリプト
 
 | コマンド            | 内容                                                                      |

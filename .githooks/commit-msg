@@ -1,0 +1,24 @@
+#!/bin/sh
+set -eu
+
+message=$1
+filtered=$(mktemp "${message}.XXXXXX")
+trap 'rm -f "$filtered"' EXIT HUP INT TERM
+
+awk '
+  index(tolower($0), "@gmail.com") {
+    printf "gmail guard: removed commit message line %d containing the blocked domain\n", NR > "/dev/stderr"
+    next
+  }
+  { print }
+' "$message" > "$filtered"
+cat "$filtered" > "$message"
+
+for field in AUTHOR COMMITTER; do
+  ident=$(git var "GIT_${field}_IDENT")
+  email=$(printf '%s\n' "$ident" | sed 's/^.*<//; s/>.*$//')
+  if printf '%s\n' "$email" | grep -iFq '@gmail.com'; then
+    printf 'gmail guard: commit blocked. %s email contains the blocked domain. Use a non-Gmail email.\n' "$field" >&2
+    exit 1
+  fi
+done
