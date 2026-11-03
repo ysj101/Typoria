@@ -14,15 +14,20 @@ pnpm install
 pnpm dev
 ```
 
-`pnpm install` の `prepare` が `core.hooksPath` を `.githooks` に設定します。
-commit-msg フックは `@gmail.com` を含む行を大文字・小文字を区別せず削除し、削除した行番号を表示します。
-作成者またはコミッターのメールアドレスに同じ文字列が含まれる場合はコミットを拒否します。
-GitHub の noreply アドレスなどを使用してください。
+### コミットと PR のメールアドレス保護
 
-ローカルでコミットのメールアドレスとメッセージを検査するには、`sh scripts/check-no-gmail.sh origin/main..HEAD` を実行します。
-範囲は第1引数で変更できます。`PR_TITLE` と `PR_BODY` を環境変数に渡すと、PR のタイトルと本文も検査します。
-GitHub Actions は PR と `main` 以外への push で同じスクリプトを実行します。
-ファイル内容は検査しません。
+公開リポジトリに個人のメールアドレスを残さないため、コミットの author / committer のメール欄、コミットメッセージ全文、PR の題名と本文に **許可リスト以外のアドレスが入っていたら失敗** します。ファイルの中身は調べません。判定は末尾一致で、既定の許可リストは `@users.noreply.github.com`・`noreply@github.com`・`noreply@anthropic.com` です（`EMAIL_ALLOWLIST` 環境変数で差し替え可）。一致したアドレスは `@` より前を伏せて表示します。
+
+- **ローカル**: `pnpm install` の `prepare` が `core.hooksPath` を `.githooks` にし、`commit-msg` フックが作成前のコミットを止めます。黙って書き換えることはしません。
+- **CI**: 既存の CI ワークフローの `lint` ジョブ（main の必須チェック）の最初のステップとして同じ検査を実行します。失敗するとマージできません。squash merge のメッセージも main への push 時に検査します。
+
+```sh
+scripts/check-email-privacy.sh                    # origin/main..HEAD
+scripts/check-email-privacy.sh BASE_SHA..HEAD_SHA # 任意の範囲
+PR_TITLE='変更の題名' PR_BODY='変更の説明' scripts/check-email-privacy.sh
+```
+
+このフックはこのリポジトリだけを守ります。全リポジトリをまとめて守るには、GitHub の Settings → Emails で「Keep my email addresses private」と「Block command line pushes that expose my email」を有効にし、Git に `git config --global user.useConfigOnly true` を設定してください。
 
 ## スクリプト
 
